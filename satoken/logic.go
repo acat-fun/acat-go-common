@@ -392,31 +392,6 @@ func loginIDOf(session *Session) string {
 	}
 }
 
-// AddTerminal 追加终端信息。
-func (s *Session) AddTerminal(info TerminalInfo) {
-	for _, existing := range s.TerminalList {
-		if existing.TokenValue == info.TokenValue && info.TokenValue != "" {
-			return
-		}
-	}
-	s.TerminalList = append(s.TerminalList, info)
-}
-
-// RemoveTerminal 移除指定 token 的终端信息。
-func (s *Session) RemoveTerminal(tokenValue string) {
-	if len(s.TerminalList) == 0 {
-		return
-	}
-	kept := s.TerminalList[:0]
-	for _, terminal := range s.TerminalList {
-		if terminal.TokenValue == tokenValue {
-			continue
-		}
-		kept = append(kept, terminal)
-	}
-	s.TerminalList = kept
-}
-
 func parseInt64(raw string) (int64, error) {
 	var out int64
 	_, err := fmt.Sscanf(strings.TrimSpace(raw), "%d", &out)

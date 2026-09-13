@@ -12,14 +12,14 @@ import (
 
 // HTTP 状态码常量，避免各服务硬编码。
 const (
-	StatusUnauthorized = http.StatusUnauthorized // 401 未登录
-	StatusForbidden    = http.StatusForbidden    // 403 无权限
-	StatusNotFound     = http.StatusNotFound     // 404 资源不存在
-	StatusConflict     = http.StatusConflict     // 409 冲突
+	StatusUnauthorized  = http.StatusUnauthorized        // 401 未登录
+	StatusForbidden     = http.StatusForbidden           // 403 无权限
+	StatusNotFound      = http.StatusNotFound            // 404 资源不存在
+	StatusConflict      = http.StatusConflict            // 409 冲突
 	StatusUnprocessable = http.StatusUnprocessableEntity // 422 参数校验失败
-	StatusBadRequest   = http.StatusBadRequest   // 400 请求格式错误
-	StatusUnavailable  = http.StatusServiceUnavailable // 503 依赖不可用
-	StatusInternal     = http.StatusInternalServerError // 500 未知错误
+	StatusBadRequest    = http.StatusBadRequest          // 400 请求格式错误
+	StatusUnavailable   = http.StatusServiceUnavailable  // 503 依赖不可用
+	StatusInternal      = http.StatusInternalServerError // 500 未知错误
 )
 
 // Error 是带 HTTP 状态码与业务码的错误。

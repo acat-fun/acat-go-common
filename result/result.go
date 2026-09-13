@@ -50,11 +50,11 @@ func (r Result[T]) IsSuccess() bool { return r.Code == CodeSuccess }
 //
 // 注意：Java 侧字段名是 list（不是 records），且额外包含 headNodeTotal。
 type PageData[T any] struct {
-	Total         int64 `json:"total"`          // 总条数
-	HeadNodeTotal int64 `json:"headNodeTotal"`  // 顶层节点数（树形分页使用，扁平列表等于 total）
-	PageIndex     int   `json:"pageIndex"`      // 当前页码，1 基
-	PageSize      int   `json:"pageSize"`       // 每页条数
-	List          []T   `json:"list"`           // 数据列表
+	Total         int64 `json:"total"`         // 总条数
+	HeadNodeTotal int64 `json:"headNodeTotal"` // 顶层节点数（树形分页使用，扁平列表等于 total）
+	PageIndex     int   `json:"pageIndex"`     // 当前页码，1 基
+	PageSize      int   `json:"pageSize"`      // 每页条数
+	List          []T   `json:"list"`          // 数据列表
 }
 
 // NewPageData 构造分页结果；list 为 nil 时输出空数组，避免前端取不到数组。
