@@ -18,6 +18,10 @@ import (
 // TokenHeader 是前端携带 token 的请求头名（管理端 Cookie 模式下仍然保留该头兼容路径）。
 const TokenHeader = "satoken"
 
+// MessageNotLoggedIn 是未登录/会话失效的统一 401 文案，
+// 与 Java 侧 GlobalExceptionHandler#handleNotLoginException 逐字一致（fun.acat.common 全局异常处理）。
+const MessageNotLoggedIn = "未登录或登录已过期，请重新登录"
+
 // contextKey 是中间件写入请求上下文的键类型。
 type contextKey string
 
@@ -83,14 +87,14 @@ func Auth(cfg AuthConfig) func(http.Handler) http.Handler {
 			}
 			token := extractToken(req, cookieName, cfg.CookieOnly)
 			if token == "" {
-				WriteError(req.Context(), w, apperr.Unauthorized("未登录或登录已失效"))
+				WriteError(req.Context(), w, apperr.Unauthorized(MessageNotLoggedIn))
 				return
 			}
 			loginID, err := cfg.Logic.CheckLogin(req.Context(), token)
 			if err != nil {
 				// 存储故障与"未登录"必须区分：前者是 503，后者是 401。
 				if err == satoken.ErrNotFound {
-					WriteError(req.Context(), w, apperr.Unauthorized("未登录或登录已失效"))
+					WriteError(req.Context(), w, apperr.Unauthorized(MessageNotLoggedIn))
 					return
 				}
 				WriteError(req.Context(), w, apperr.Unavailable("会话存储不可用: %v", err))
@@ -102,7 +106,7 @@ func Auth(cfg AuthConfig) func(http.Handler) http.Handler {
 				return
 			}
 			if session == nil {
-				WriteError(req.Context(), w, apperr.Unauthorized("未登录或登录已失效"))
+				WriteError(req.Context(), w, apperr.Unauthorized(MessageNotLoggedIn))
 				return
 			}
 			next.ServeHTTP(w, req.WithContext(WithSession(req.Context(), session, token)))

@@ -84,8 +84,17 @@ func TestAuthRejectsMissingToken(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("解析响应失败: %v", err)
 	}
-	if payload["message"] != "未登录或登录已失效" || payload["data"] != nil {
+	if payload["message"] != MessageNotLoggedIn || payload["data"] != nil || payload["success"] != false {
 		t.Errorf("响应体 = %v", payload)
+	}
+	// 401 文案与 Java GlobalExceptionHandler#handleNotLoginException 逐字一致。
+	if payload["message"] != "未登录或登录已过期，请重新登录" {
+		t.Errorf("message = %v", payload["message"])
+	}
+	// 错误信封同样是 Java 键序 code→message→data→success。
+	want := `{"code":401,"message":"未登录或登录已过期，请重新登录","data":null,"success":false}` + "\n"
+	if rec.Body.String() != want {
+		t.Errorf("响应体 = %q, 期望 %q", rec.Body.String(), want)
 	}
 }
 

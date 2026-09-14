@@ -1,16 +1,22 @@
 // Package result 提供与 Java 侧 fun.acat.common.result.Result 完全一致的统一响应结构。
 //
 // 契约要点（迁移期必须保持一致，见 docs/task/2026-09-13-Java迁移阶段0-契约清单.md）：
-//   - 成功：HTTP 200 + {"code":0,"message":"OK","data":...}
-//   - 业务失败：HTTP 200 + {"code":1,"message":"...","data":null}
+//   - 成功：HTTP 200 + {"code":0,"message":"OK","data":...,"success":true}
+//   - 业务失败：HTTP 200 + {"code":1,"message":"...","data":null,"success":false}
+//   - 顶层键序固定为 code→message→data→success，与 Java 侧逐字对齐
+//   - success 是布尔值且恒等于 code==0（Java: Result#success），由 OK/OKMessage/Fail/FailCode 统一维护
 //   - 仅认证/权限/未找到/冲突等语义错误才改变 HTTP 状态码（见 apperr 包）
 package result
 
 // Result 是统一响应包装，字段名与 Java 版逐字对齐。
+//
+// Success 必须声明在 Data 之后：Go 的 encoding/json 按字段声明顺序输出键，
+// 只有这个顺序才能保证键序为 Java 侧的 code→message→data→success。
 type Result[T any] struct {
 	Code    int    `json:"code"`    // 0=成功，非 0=业务错误
 	Message string `json:"message"` // 提示消息
 	Data    T      `json:"data"`    // 响应数据
+	Success bool   `json:"success"` // 是否成功，恒等于 code==0（Java: Result#success）
 }
 
 // 与 Java 侧一致的业务码。
@@ -23,27 +29,27 @@ const (
 	MessageOK = "OK"
 )
 
-// OK 返回成功响应（code=0, message="OK"）。
+// OK 返回成功响应（code=0, message="OK", success=true）。
 func OK[T any](data T) Result[T] {
-	return Result[T]{Code: CodeSuccess, Message: MessageOK, Data: data}
+	return Result[T]{Code: CodeSuccess, Message: MessageOK, Data: data, Success: true}
 }
 
-// OKMessage 返回带自定义消息的成功响应。
+// OKMessage 返回带自定义消息的成功响应（code=0, success=true）。
 func OKMessage[T any](message string, data T) Result[T] {
-	return Result[T]{Code: CodeSuccess, Message: message, Data: data}
+	return Result[T]{Code: CodeSuccess, Message: message, Data: data, Success: true}
 }
 
-// Fail 返回默认失败码（1）的业务失败响应。
+// Fail 返回默认失败码（1）的业务失败响应（success=false）。
 func Fail(message string) Result[any] {
-	return Result[any]{Code: CodeFail, Message: message, Data: nil}
+	return Result[any]{Code: CodeFail, Message: message, Data: nil, Success: false}
 }
 
-// FailCode 返回指定业务码的失败响应。
+// FailCode 返回指定业务码的失败响应（success=false）。
 func FailCode(code int, message string) Result[any] {
-	return Result[any]{Code: code, Message: message, Data: nil}
+	return Result[any]{Code: code, Message: message, Data: nil, Success: false}
 }
 
-// IsSuccess 判断响应是否成功。
+// IsSuccess 判断响应是否成功；语义保持 code==0，与 Java 侧 Result#isSuccess 一致。
 func (r Result[T]) IsSuccess() bool { return r.Code == CodeSuccess }
 
 // PageData 是分页返回结构，字段名与 Java 版一致。

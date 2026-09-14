@@ -1,7 +1,9 @@
 package result
 
 import (
+	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -10,7 +12,7 @@ func TestOKShape(t *testing.T) {
 	if err != nil {
 		t.Fatalf("序列化失败: %v", err)
 	}
-	want := `{"code":0,"message":"OK","data":{"a":"b"}}`
+	want := `{"code":0,"message":"OK","data":{"a":"b"},"success":true}`
 	if string(raw) != want {
 		t.Errorf("响应体 = %s, 期望 %s", raw, want)
 	}
@@ -21,10 +23,71 @@ func TestFailShape(t *testing.T) {
 	if err != nil {
 		t.Fatalf("序列化失败: %v", err)
 	}
-	want := `{"code":1,"message":"用户名或密码错误","data":null}`
+	want := `{"code":1,"message":"用户名或密码错误","data":null,"success":false}`
 	if string(raw) != want {
 		t.Errorf("响应体 = %s, 期望 %s", raw, want)
 	}
+}
+
+func TestOKMessageSetsSuccess(t *testing.T) {
+	got := OKMessage("自定义成功", []string{"a"})
+	if !got.Success || got.Code != CodeSuccess || !got.IsSuccess() {
+		t.Errorf("OKMessage = %+v", got)
+	}
+	raw, err := json.Marshal(got)
+	if err != nil {
+		t.Fatalf("序列化失败: %v", err)
+	}
+	want := `{"code":0,"message":"自定义成功","data":["a"],"success":true}`
+	if string(raw) != want {
+		t.Errorf("响应体 = %s, 期望 %s", raw, want)
+	}
+}
+
+// TestResultKeyOrderMatchesJava 顶层键序必须与 Java 侧一致：code→message→data→success。
+func TestResultKeyOrderMatchesJava(t *testing.T) {
+	cases := []struct {
+		name    string
+		payload any
+	}{
+		{name: "成功", payload: OK(map[string]string{"a": "b"})},
+		{name: "业务失败", payload: Fail("用户名或密码错误")},
+	}
+	for _, testCase := range cases {
+		raw, err := json.Marshal(testCase.payload)
+		if err != nil {
+			t.Fatalf("%s 序列化失败: %v", testCase.name, err)
+		}
+		if got := strings.Join(topLevelKeys(t, raw), ","); got != "code,message,data,success" {
+			t.Errorf("%s 顶层键序 = %s, 期望 code,message,data,success（Java 键序）", testCase.name, got)
+		}
+	}
+}
+
+// topLevelKeys 按出现顺序返回顶层 JSON 对象的键。
+func topLevelKeys(t *testing.T, raw []byte) []string {
+	t.Helper()
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	if _, err := decoder.Token(); err != nil { // 消费顶层 '{'
+		t.Fatalf("解析响应失败: %v (%s)", err, raw)
+	}
+	keys := make([]string, 0, 4)
+	for decoder.More() {
+		token, err := decoder.Token()
+		if err != nil {
+			t.Fatalf("读取顶层键失败: %v (%s)", err, raw)
+		}
+		key, ok := token.(string)
+		if !ok {
+			t.Fatalf("顶层键不是字符串: %v (%s)", token, raw)
+		}
+		keys = append(keys, key)
+		var value json.RawMessage
+		if err := decoder.Decode(&value); err != nil {
+			t.Fatalf("跳过键 %s 的值失败: %v (%s)", key, err, raw)
+		}
+	}
+	return keys
 }
 
 func TestFailCode(t *testing.T) {
@@ -32,6 +95,10 @@ func TestFailCode(t *testing.T) {
 	got := FailCode(40901, "数据已被他人修改")
 	if got.Code != 40901 || got.Data != nil {
 		t.Errorf("FailCode = %+v", got)
+	}
+	// 非 0 业务码一律 success=false。
+	if got.Success || got.IsSuccess() {
+		t.Errorf("FailCode 的 success 应为 false: %+v", got)
 	}
 }
 
