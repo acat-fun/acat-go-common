@@ -107,9 +107,19 @@ func TestPageDataFieldNames(t *testing.T) {
 	if err != nil {
 		t.Fatalf("序列化失败: %v", err)
 	}
-	want := `{"total":3,"headNodeTotal":3,"pageIndex":1,"pageSize":10,"list":["a"]}`
+	// 普通分页 headNodeTotal=null（Java PageData.of 语义）
+	want := `{"total":3,"headNodeTotal":null,"pageIndex":1,"pageSize":10,"list":["a"]}`
 	if string(raw) != want {
 		t.Errorf("分页响应体 = %s, 期望 %s", raw, want)
+	}
+	// 树分页 headNodeTotal 有值（Java PageData.ofTree 语义）
+	treeRaw, err := json.Marshal(NewTreePageData([]string{"a"}, 3, 2, 1, 10))
+	if err != nil {
+		t.Fatalf("树分页序列化失败: %v", err)
+	}
+	treeWant := `{"total":3,"headNodeTotal":2,"pageIndex":1,"pageSize":10,"list":["a"]}`
+	if string(treeRaw) != treeWant {
+		t.Errorf("树分页响应体 = %s, 期望 %s", treeRaw, treeWant)
 	}
 }
 
@@ -118,7 +128,7 @@ func TestPageDataNilListBecomesEmptyArray(t *testing.T) {
 	if err != nil {
 		t.Fatalf("序列化失败: %v", err)
 	}
-	want := `{"total":0,"headNodeTotal":0,"pageIndex":1,"pageSize":10,"list":[]}`
+	want := `{"total":0,"headNodeTotal":null,"pageIndex":1,"pageSize":10,"list":[]}`
 	if string(raw) != want {
 		t.Errorf("空列表响应体 = %s, 期望 %s", raw, want)
 	}

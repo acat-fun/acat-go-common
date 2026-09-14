@@ -54,27 +54,36 @@ func (r Result[T]) IsSuccess() bool { return r.Code == CodeSuccess }
 
 // PageData 是分页返回结构，字段名与 Java 版一致。
 //
-// 注意：Java 侧字段名是 list（不是 records），且额外包含 headNodeTotal。
+// headNodeTotal 用指针以复刻 Java 语义：Java `PageData.of(total, pageIndex, pageSize, list)`
+// **不设置** headNodeTotal → 序列化为 `null`；只有树分页 `PageData.ofTree(...)` 才给值
+// （Java 侧唯一调用点在 `DictAdminServiceImpl` 的字典树分页，见 acat-svc-common/PageData.java:30-46）。
 type PageData[T any] struct {
-	Total         int64 `json:"total"`         // 总条数
-	HeadNodeTotal int64 `json:"headNodeTotal"` // 顶层节点数（树形分页使用，扁平列表等于 total）
-	PageIndex     int   `json:"pageIndex"`     // 当前页码，1 基
-	PageSize      int   `json:"pageSize"`      // 每页条数
-	List          []T   `json:"list"`          // 数据列表
+	Total         int64  `json:"total"`         // 总条数
+	HeadNodeTotal *int64 `json:"headNodeTotal"` // 树分页根节点总数；普通分页为 null
+	PageIndex     int    `json:"pageIndex"`     // 当前页码，1 基
+	PageSize      int    `json:"pageSize"`      // 每页条数
+	List          []T    `json:"list"`          // 数据列表
 }
 
-// NewPageData 构造分页结果；list 为 nil 时输出空数组，避免前端取不到数组。
+// NewPageData 构造**普通分页**结果（headNodeTotal=null，与 Java PageData.of 一致）；
+// list 为 nil 时输出空数组，避免前端取不到数组。
 func NewPageData[T any](list []T, total int64, pageIndex, pageSize int) PageData[T] {
 	if list == nil {
 		list = []T{}
 	}
 	return PageData[T]{
-		Total:         total,
-		HeadNodeTotal: total,
-		PageIndex:     pageIndex,
-		PageSize:      pageSize,
-		List:          list,
+		Total:     total,
+		PageIndex: pageIndex,
+		PageSize:  pageSize,
+		List:      list,
 	}
+}
+
+// NewTreePageData 构造**树分页**结果（headNodeTotal 有值，与 Java PageData.ofTree 一致）。
+func NewTreePageData[T any](list []T, total, headNodeTotal int64, pageIndex, pageSize int) PageData[T] {
+	page := NewPageData(list, total, pageIndex, pageSize)
+	page.HeadNodeTotal = &headNodeTotal
+	return page
 }
 
 // 与 Java 侧一致的分页默认值。
