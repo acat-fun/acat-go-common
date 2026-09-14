@@ -143,8 +143,8 @@ func TestPutSignsRequest(t *testing.T) {
 	const (
 		wantPayload = "21910b9985bc5be25ae5c1092a90745b776b1d9fcc971e1c7e0966ccd125d023"
 		wantAuth    = "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20260102/us-east-1/s3/aws4_request, " +
-			"SignedHeaders=host;content-type;x-amz-content-sha256;x-amz-date, " +
-			"Signature=8ccfa5d3b4d9a2ce85236b21573abb7d16e080be8b33187795f77f088cb99106"
+			"SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, " +
+			"Signature=c644dba251c9d73fde37d439c15d336ecbf8ea7cedd90c5b08df05c92f017a29"
 	)
 	var (
 		gotPath, gotAuth, gotPayload, gotType, gotBody string

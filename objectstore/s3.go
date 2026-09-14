@@ -249,7 +249,8 @@ func (c *Client) newBucketRequest(ctx context.Context, method string) (*http.Req
 	if err != nil {
 		return nil, fmt.Errorf("构造对象存储请求失败: %w", err)
 	}
-	c.sign(request, canonicalURI, http.MethodHead, emptyPayloadHash, "")
+	// 方法必须与真实请求一致（HEAD=探测桶、PUT=建桶），否则签名不匹配。
+	c.sign(request, canonicalURI, method, emptyPayloadHash, "")
 	return request, nil
 }
 
@@ -293,11 +294,21 @@ func (c *Client) sign(request *http.Request, canonicalURI, method, payloadHash, 
 	amzDateString := amzDate.Format("20060102T150405Z")
 	host := request.URL.Host
 
-	canonicalHeaders := "host:" + host + "\n"
-	signedHeaders := "host"
+	// SigV4 要求 CanonicalHeaders 与 SignedHeaders 都按「头名小写字典序」排列：
+	// `content-type` < `host` < `x-amz-content-sha256` < `x-amz-date`。把 host 写在
+	// content-type 之前会让带 Content-Type 的 PUT 签名不匹配（MinIO 返回
+	// SignatureDoesNotMatch），而 GET/HEAD（无 content-type）看起来完全正常。
+	canonicalHeaders := ""
+	signedHeaders := ""
 	if contentType != "" {
 		canonicalHeaders += "content-type:" + contentType + "\n"
-		signedHeaders += ";content-type"
+		signedHeaders = "content-type"
+	}
+	canonicalHeaders += "host:" + host + "\n"
+	if signedHeaders == "" {
+		signedHeaders = "host"
+	} else {
+		signedHeaders += ";host"
 	}
 	canonicalHeaders += "x-amz-content-sha256:" + payloadHash + "\n" +
 		"x-amz-date:" + amzDateString + "\n"
