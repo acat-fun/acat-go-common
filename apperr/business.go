@@ -1,6 +1,9 @@
 package apperr
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // 本文件定义"业务失败"语义：Java 侧 Result.fail / ServiceResult.fail 对应
 // HTTP 200 + body.code≠0。业务失败与基础设施异常必须分开，
@@ -101,24 +104,8 @@ func IsBusiness(err error) (*Business, bool) {
 		return nil, false
 	}
 	var target *Business
-	if asError(err, &target) {
+	if errors.As(err, &target) {
 		return target, true
 	}
 	return nil, false
-}
-
-// asError 是 errors.As 的薄封装，避免本文件依赖 errors 包的命名冲突。
-func asError(err error, target **Business) bool {
-	for err != nil {
-		if b, ok := err.(*Business); ok {
-			*target = b
-			return true
-		}
-		unwrapper, ok := err.(interface{ Unwrap() error })
-		if !ok {
-			return false
-		}
-		err = unwrapper.Unwrap()
-	}
-	return false
 }
