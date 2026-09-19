@@ -12,3 +12,9 @@
 .idea/
 .vscode/
 .DS_Store
+
+# ---- Go 依赖不入库（项目规范）----
+# vendor/ 为 go mod 生成物，默认不提交；依赖统一按 go.mod 从 git.acat.fun 拉取。
+# go.sum 同样不入库（GOSUMDB=off + GOPRIVATE=git.acat.fun）。
+vendor/
+go.sum
