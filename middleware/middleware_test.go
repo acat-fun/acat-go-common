@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"git.acat.fun/acat-fun/acat-go-common/apperr"
-	"git.acat.fun/acat-fun/acat-go-common/logging"
-	"git.acat.fun/acat-fun/acat-go-common/result"
-	"git.acat.fun/acat-fun/acat-go-common/satoken"
+	"47.108.230.93/acat-fun/acat-go-common/apperr"
+	"47.108.230.93/acat-fun/acat-go-common/logging"
+	"47.108.230.93/acat-fun/acat-go-common/result"
+	"47.108.230.93/acat-fun/acat-go-common/satoken"
 )
 
 func newAuthFixture(t *testing.T) (*satoken.Logic, string) {

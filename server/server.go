@@ -13,10 +13,10 @@ import (
 	"syscall"
 	"time"
 
-	"git.acat.fun/acat-fun/acat-go-common/config"
-	"git.acat.fun/acat-fun/acat-go-common/health"
-	"git.acat.fun/acat-fun/acat-go-common/logging"
-	"git.acat.fun/acat-fun/acat-go-common/middleware"
+	"47.108.230.93/acat-fun/acat-go-common/config"
+	"47.108.230.93/acat-fun/acat-go-common/health"
+	"47.108.230.93/acat-fun/acat-go-common/logging"
+	"47.108.230.93/acat-fun/acat-go-common/middleware"
 )
 
 // Service 是可运行服务的最小契约。

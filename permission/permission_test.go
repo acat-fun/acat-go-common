@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"git.acat.fun/acat-fun/acat-go-common/apperr"
-	"git.acat.fun/acat-fun/acat-go-common/satoken"
+	"47.108.230.93/acat-fun/acat-go-common/apperr"
+	"47.108.230.93/acat-fun/acat-go-common/satoken"
 )
 
 // newChecker 构造带内存会话的 Logic 与 Checker。

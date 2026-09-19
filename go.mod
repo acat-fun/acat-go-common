@@ -1,4 +1,4 @@
-module git.acat.fun/acat-fun/acat-go-common
+module 47.108.230.93/acat-fun/acat-go-common
 
 go 1.25.0
 
