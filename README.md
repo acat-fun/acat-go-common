@@ -19,6 +19,10 @@ ACAT 后端 Go 公共基础库（Java 渐进迁移 Go 方案的阶段 1 产物�
 | `middleware` | 认证中间件、Trace 中间件、统一异常/恢复、CORS | `SaInterceptor` + `RequestTimingGlobalFilter` |
 | `server` | HTTP 服务装配、健康探针、优雅停机 | Spring Boot Web 容器 |
 | `health` | 存活/就绪探针与依赖健康检查 | `actuator/health` |
+| `permission` | 领域权限判定框架（`/health` 等白名单 + `@SaCheckPermission` 语义） | `SaInterceptor` + `StpInterfaceImpl` |
+| `objectstore` | MinIO/S3 对象存储（SigV4 签名） | MinIO Java SDK |
+| `mysqlx` | MySQL 写样板：空值转换（`nullString`/`nullInt`/`nullTime`）、约束冲突识别（`IsIntegrityViolation`）、MP 风格 insert/update 样板 | MyBatis-Plus `MyBaseMapper` + `MyMetaObjectHandler` |
+| `mongox` | **MySQL+Mongo 跨存储一致性 outbox**（2026-09-19 遗留事项 2）：`EventStore`（业务事务内入队 `t_read_mongo_outbox`）+ `Replayer`（后台幂等重放，单条失败隔离、10 次上限）+ `DocApplier`（服务注入应用逻辑） | 无 Java 对应（Java 侧无补偿机制，Go 补齐） |
 
 ## Sa-Token 兼容边界（重要）
 
