@@ -7,7 +7,6 @@ import (
 
 // TerminalInfo 对应 cn.dev33.satoken.session.SaTerminalInfo。
 //
-// Java 字段（声明顺序即 Jackson 序列化顺序）：
 // index、tokenValue、deviceType、deviceId、extraData、createTime。
 // 注意 index 由 SaSession.addTerminal 赋值（从 1 开始），Go 侧同样维护。
 type TerminalInfo struct {
@@ -19,9 +18,9 @@ type TerminalInfo struct {
 	DeviceType string `json:"deviceType,omitempty"`
 	// DeviceID 设备 id，可为空。
 	DeviceID string `json:"deviceId,omitempty"`
-	// ExtraData 终端扩展数据，对应 Java Map<String,Object>。
+	// ExtraData 终端扩展数据。
 	ExtraData map[string]any `json:"extraData,omitempty"`
-	// CreateTime 毫秒时间戳（Java 侧 System.currentTimeMillis()）。
+	// CreateTime 毫秒时间戳。
 	CreateTime int64 `json:"createTime,omitempty"`
 }
 
@@ -72,7 +71,7 @@ type Session struct {
 	LoginType string
 	LoginID   any
 	Token     string
-	// HistoryTerminalCount 历史终端计数；新增终端时自增（Java 语义）。
+	// HistoryTerminalCount 历史终端计数；新增终端时自增。
 	HistoryTerminalCount int
 	// CreateTime 毫秒时间戳。
 	CreateTime int64
@@ -82,7 +81,7 @@ type Session struct {
 	DataMap map[string]any
 }
 
-// 与 Java 实现类名对齐的常量（Jackson WRAPPER_ARRAY 第一元素）。
+// 与
 const (
 	javaClassSessionMap     = "java.util.concurrent.ConcurrentHashMap"
 	javaClassTerminalVector = "java.util.Vector"
@@ -149,7 +148,7 @@ func (s *Session) String(key string) string {
 	return ""
 }
 
-// AddTerminal 追加终端并维护 index/historyTerminalCount（与 Java SaSession.addTerminal 对齐）。
+// AddTerminal 追加终端并维护 index/historyTerminalCount。
 func (s *Session) AddTerminal(info TerminalInfo) {
 	for _, existing := range s.TerminalList {
 		if existing.TokenValue == info.TokenValue && info.TokenValue != "" {
@@ -164,7 +163,7 @@ func (s *Session) AddTerminal(info TerminalInfo) {
 	s.TerminalList = append(s.TerminalList, info)
 }
 
-// RemoveTerminal 移除指定 token 的终端（historyTerminalCount 不回退，与 Java 一致）。
+// RemoveTerminal 移除指定 token 的终端（historyTerminalCount 不回退）。
 func (s *Session) RemoveTerminal(tokenValue string) {
 	if len(s.TerminalList) == 0 {
 		return
@@ -208,7 +207,7 @@ func marshalSession(s *Session) ([]byte, error) {
 		// Jackson 对集合使用 WRAPPER_ARRAY：["java.util.Vector", [...]]
 		terminals = []any{javaClassTerminalVector, items}
 	}
-	// dataMap 恒为对象；Java 侧是 ConcurrentHashMap -> WRAPPER_ARRAY 包装。
+	// dataMap 恒为对象。
 	dataMap := any(nil)
 	if s.DataMap != nil {
 		wrapped := make(map[string]any, len(s.DataMap))

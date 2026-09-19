@@ -42,7 +42,7 @@ func TestLoginWritesTokenAndSession(t *testing.T) {
 		t.Errorf("simple-uuid token 长度 = %d, 期望 %d", len(token), simpleUUIDLen)
 	}
 
-	// token -> loginId 映射的 value 必须是字符串形式的 loginId（与 Java 一致）。
+	// token -> loginId 映射的 value 必须是字符串形式的 loginId。
 	raw, err := store.Get(ctx, logic.TokenKey(token))
 	if err != nil {
 		t.Fatalf("token 映射未写入: %v", err)
@@ -126,7 +126,7 @@ func TestLogoutRemovesTokenAndTerminal(t *testing.T) {
 	if _, err := store.Get(ctx, logic.TokenKey(token)); !errors.Is(err, ErrNotFound) {
 		t.Errorf("token 映射应被删除，实际 err=%v", err)
 	}
-	// 终端被清空后账号会话整体删除（与 Java 侧 logoutByTokenValue 行为一致）。
+	// 终端被清空后账号会话整体删除。
 	if _, err := store.Get(ctx, logic.SessionKey("u-3")); !errors.Is(err, ErrNotFound) {
 		t.Errorf("无终端的账号会话应被删除，实际 err=%v", err)
 	}

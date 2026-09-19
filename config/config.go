@@ -1,6 +1,6 @@
-// Package config 提供环境变量 + YAML 的配置加载能力，替代 Java 侧的
+// Package config 提供环境变量 + YAML 的配置加载能力（对应
 // bootstrap.yml + Nacos 配置中心组合（迁移期 Nacos 保持兼容，Go 侧先支持本地/
-// 环境变量配置，Nacos 接入见 docs/task 迁移方案阶段 3）。
+// 环境变量配置（Nacos 未接入，用环境变量 + 静态上游）。
 //
 // 占位符规则：字符串中的 ${ENV_NAME:default} 会被替换为环境变量值，未设置时使用 default。
 package config

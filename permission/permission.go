@@ -1,13 +1,13 @@
 // Package permission 提供管理端权限判定（Sa-Token 会话快照 + root 直通）的公共实现。
 //
-// 背景：Java 侧每个服务都有 `StpInterfaceImpl` + `@SaCheckPermission` 注解拦截；
+// 背景：管理端各服务都有注解式权限拦截；
 // 迁移到 Go 后没有注解拦截器，由各服务 httpapi 显式调用本包的 Checker/Actor 完成同样判定。
 // 阶段 1/2 各服务曾各自复制一份（admin-site/account/operation/…），此处上提为公共能力。
 //
-// 与 Java 侧的逐字对齐点：
-//   - root 固定 `loginID == "0"`（Java `StpInterfaceImpl.ROOT_LOGIN_ID`）；
-//   - 其余用户读登录时写入会话的 permissions 快照（Java `StpInterfaceImpl.getPermissionList`）；
-//   - 不通过返回 `apperr.Forbidden("无操作权限")`（HTTP 403，文案与 Java 一致）。
+// 对齐点：
+//   - root 固定 `loginID == "0"`；
+//   - 其余用户读登录时写入会话的 permissions 快照；
+//   - 不通过返回 `apperr.Forbidden("无操作权限")`（HTTP 403）。
 package permission
 
 import (
@@ -19,10 +19,10 @@ import (
 	"gitea.acat.fun/acat-fun/acat-go-common/satoken"
 )
 
-// RootLoginID 是超级管理员固定 id（Java `StpInterfaceImpl.ROOT_LOGIN_ID`）。
+// RootLoginID 是超级管理员固定 id。
 const RootLoginID = "0"
 
-// MessageForbidden 是权限不足的统一文案（Java `GlobalExceptionHandler` 403 文案）。
+// MessageForbidden 是权限不足的统一文案。
 const MessageForbidden = "无操作权限"
 
 // Checker 封装管理端权限判定：root 直接放行，其余读 Sa-Token 会话权限快照。
@@ -60,7 +60,7 @@ func LoginID(session *satoken.Session) string {
 
 // Actor 是当前请求的操作者视图（登录 id + 会话 + 权限判定器）。
 //
-// 对应 Java 侧的 StpUtil 线程上下文：Service 层用它完成 root 判定与写路径的 createBy/updateBy。
+// 等价于请求上下文：Service 层用它完成 root 判定与写路径的 createBy/updateBy。
 type Actor struct {
 	// LoginID 当前登录用户 id；未登录为空串。
 	LoginID string
@@ -75,7 +75,7 @@ func ActorFrom(ctx context.Context, checker *Checker) *Actor {
 	return &Actor{LoginID: LoginID(session), Session: session, checker: checker}
 }
 
-// IsRoot 判断当前操作者是否为超级管理员（只按 loginID=="0"，与 Java isRoot() 一致）。
+// IsRoot 判断当前操作者是否为超级管理员（只按 loginID=="0"。
 func (a *Actor) IsRoot() bool {
 	return a != nil && a.LoginID == RootLoginID
 }
@@ -93,8 +93,7 @@ func (a *Actor) RequirePermission(code string) error {
 
 // RequireAllPermissions 判定多个权限码（AND 语义）。
 //
-// 对应 Java 的「类级 + 方法级」双注解：Sa-Token 1.44 的 SaAnnotationStrategy
-// 先校验类注解再校验方法级注解，两者都通过才放行。
+// 类级 + 方法级双注解组合。
 func (a *Actor) RequireAllPermissions(codes ...string) error {
 	for _, code := range codes {
 		if err := a.RequirePermission(code); err != nil {
@@ -106,8 +105,8 @@ func (a *Actor) RequireAllPermissions(codes ...string) error {
 
 // RequireAnyPermission 判定多个权限码（OR 语义）。
 //
-// 对应 Java `@SaCheckPermission(value = {A, B}, mode = SaMode.OR)`：
-// 任一命中即通过；空列表按“无权限”处理（Java 注解 value 为空时 Sa-Token 抛异常，不会静默放行）。
+// OR 权限模式（任一命中即通过）：
+// 任一命中即通过；空列表按“无权限”处理。
 func (a *Actor) RequireAnyPermission(codes ...string) error {
 	if a == nil {
 		return apperr.Forbidden(MessageForbidden)
@@ -128,7 +127,7 @@ func (a *Actor) RequireAnyPermission(codes ...string) error {
 
 // RequirePermissionGroups 判定多组权限码：组间 AND、组内 OR。
 //
-// 对应 Java 的「类级注解 OR 列表 + 方法级注解 OR 列表」，两者都通过才放行。
+// 对应
 func (a *Actor) RequirePermissionGroups(groups ...[]string) error {
 	for _, group := range groups {
 		if err := a.RequireAnyPermission(group...); err != nil {

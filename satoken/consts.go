@@ -12,7 +12,7 @@
 // ⚠️ 兼容性边界：Session 的 JSON 形态由 sa-token-jackson（Jackson default typing，
 // 属性形式 @class，NON_FINAL 类嵌入类型信息）产生。本包按该约定实现编解码，
 // 但**尚未在真实 Redis 上与 Java 侧做交叉验证**，验证清单见包内 session_codec.go 注释与
-// docs/task/2026-09-13-Java迁移阶段0-认证与权限机制.md。
+// 。
 package satoken
 
 // 与 Sa-Token 默认配置一致的常量。
@@ -35,7 +35,7 @@ const (
 	NotValueExpire int64 = -2
 )
 
-// Session 内约定的数据键，由 ACAT 业务写入，Java 侧 StpInterfaceImpl 读取。
+// Session 内约定的数据键，由 ACAT 业务写入
 const (
 	// DataKeyPermissions 权限码列表（Java: StpUtil.getSession().set("permissions", ...)）。
 	DataKeyPermissions = "permissions"
@@ -48,7 +48,6 @@ const (
 // jacksonClass 是 Jackson default typing 的类型属性名。
 const jacksonClass = "@class"
 
-// Java 侧类型全限定名，用于生成/解析 Jackson 多态 JSON。
 const (
 	javaClassSession      = "cn.dev33.satoken.session.SaSession"
 	javaClassTerminalInfo = "cn.dev33.satoken.session.SaTerminalInfo"

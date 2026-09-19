@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// 本文件定义"业务失败"语义：Java 侧 Result.fail / ServiceResult.fail 对应
+// 本文件定义"业务失败"语义：对应
 // HTTP 200 + body.code≠0。业务失败与基础设施异常必须分开，
 // 后者（数据库/Redis/网络）要按 5xx 抛出并保留 cause。
 
@@ -21,14 +21,14 @@ type Business struct {
 	cause error
 }
 
-// BusinessCodeFail 是 Java 侧 Result.fail 的默认业务码。
+// BusinessCodeFail 是默认业务失败码。
 const BusinessCodeFail = 1
 
-// 统一业务错误码（对外 body.code；HTTP 状态保持 200，与 Java 业务失败口径一致）。
+// 统一业务错误码（对外 body.code；HTTP 状态保持 200。
 //
-// 迁移期约定（见 docs/规范.md §8.8「写入语义与 0 行影响」）：
-//   - Java 已定义的失败路径继续沿用 code=1 + Java 原文案，前端与调用方零感知；
-//   - 新增的**严格模式**失败（并发冲突、状态已变化等 Java 曾静默成功的情形）
+// 写入语义分级约定：
+//   - 既有失败路径沿用 code=1 + 既有文案，前端与调用方零感知；
+//   - 新增的**严格模式**失败（并发冲突、状态已变化等曾静默成功的情形）
 //     使用下列专用码，便于前端与监控区分。
 const (
 	// CodeStateChanged 资源状态已变化（40901）：目标存在，但当前状态不允许本次操作。

@@ -1,6 +1,6 @@
 // Package health 提供存活/就绪探针注册表。
 //
-// 与 Java 侧 actuator/health 对应：/healthz 为存活探针（进程可用即 200），
+// 探针语义：/healthz 为存活探针（进程可用即 200），
 // /readyz 为就绪探针（全部依赖检查通过才 200，否则 503）。
 package health
 

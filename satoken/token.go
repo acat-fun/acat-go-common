@@ -64,7 +64,7 @@ func NewTokenValue(style string) (string, error) {
 	}
 }
 
-// NewSessionID 生成 Account-Session 的 id，与 Java 侧 UUID.randomUUID().toString() 对齐。
+// NewSessionID 生成 Account-Session 的 id。
 func NewSessionID() string {
 	return uuid.NewString()
 }

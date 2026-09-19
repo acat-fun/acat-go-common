@@ -60,7 +60,7 @@ func TestMarshalSessionMatchesJavaShape(t *testing.T) {
 	session.LoginType = "login"
 	session.LoginID = "0"
 	session.CreateTime = 1789317424024
-	// 与 Java 侧 addTerminal 相同的顺序：先自增计数再写 index。
+	// 与
 	session.AddTerminal(TerminalInfo{TokenValue: "go-token-1", CreateTime: 1789317424025})
 	session.Set(DataKeyPermissions, []string{"acat:admin:system:dicts"})
 	session.Set(DataKeyUsername, "root")
@@ -158,7 +158,7 @@ func TestUnmarshalLegacyPropertyWrapper(t *testing.T) {
 	}
 }
 
-// TestAddTerminalAssignsIndexAndCount 锁定终端计数语义（与 Java SaSession 一致）。
+// TestAddTerminalAssignsIndexAndCount 锁定终端计数语义。
 func TestAddTerminalAssignsIndexAndCount(t *testing.T) {
 	session := NewSession("s")
 	session.AddTerminal(TerminalInfo{TokenValue: "t1"})
@@ -177,7 +177,7 @@ func TestAddTerminalAssignsIndexAndCount(t *testing.T) {
 	if len(session.TerminalList) != 2 || session.HistoryTerminalCount != 2 {
 		t.Errorf("重复 token 应被忽略: %+v", session.TerminalList)
 	}
-	// 删除终端不回退计数（Java 语义）。
+	// 删除终端不回退计数。
 	session.RemoveTerminal("t1")
 	if len(session.TerminalList) != 1 || session.HistoryTerminalCount != 2 {
 		t.Errorf("删除后 = %d/%d", len(session.TerminalList), session.HistoryTerminalCount)

@@ -40,7 +40,7 @@ type Scanner interface {
 	Scan(dest ...any) error
 }
 
-// ---- 可空列 → 指针（NULL → nil，与 Java null 一致）----
+// ---- 可空列 → 指针（NULL → nil
 
 // NullString 把可空字符串列转换为 *string。
 func NullString(value sql.NullString) *string {
@@ -149,7 +149,6 @@ func TimeArg(value *time.Time) any {
 // IsIntegrityViolation 判断错误链中是否包含数据库约束冲突
 // （唯一键 1062 / 非空 1048 / 缺列无默认值 1364 / 外键 1216/1217/1451/1452 等）。
 //
-// Java 侧这些异常由 GlobalExceptionHandler 兜底为 HTTP 500 + code=500「服务器内部错误」，
 // 服务层据此映射为 apperr.Internal。
 func IsIntegrityViolation(err error) (*mysqlDriver.MySQLError, bool) {
 	var mysqlErr *mysqlDriver.MySQLError

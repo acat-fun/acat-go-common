@@ -1,6 +1,6 @@
 // Package logging 提供基于 log/slog 的结构化日志与 trace_id 上下文。
 //
-// 迁移期目标：与 Java 侧 logback 输出同源可查（同一 trace_id 贯穿 HTTP 与下游调用），
+// 目标：同一 trace_id 贯穿 HTTP 与下游调用，日志可串联；
 // 日志字段使用小写下划线，便于日志平台统一检索。
 package logging
 

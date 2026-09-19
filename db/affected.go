@@ -15,7 +15,7 @@ import (
 //   - RequireAffected / RequireUpdated：严格模式，0 行即返回**调用方给定**的语义错误；
 //   - WarnIfUnaffected：兼容模式，0 行不改变业务结果，只记录结构化 warn。
 //
-// 对应的分级标准与错误码见 docs/规范.md §8.8。
+// 分级标准：严格模式（0 行返回调用方语义错误）与兼容模式（0 行仅记 warn）。
 
 // ErrWriteNotApplied 是写操作未命中任何行的底层哨兵；
 // 调用方未提供语义错误时作为兜底，避免 0 行被当成成功。
@@ -65,7 +65,7 @@ func RequireUpdated(fact WriteFact, errConflict error) error {
 
 // WarnIfUnaffected 兼容模式：0 行不改变业务结果，只记录结构化 warn（含 compatibility_mode）。
 //
-// 适用于「0 行是幂等结果」或「迁移期必须保持 Java 静默成功语义」的普通写入；
+// 适用于「0 行是幂等结果」或「0 行为静默成功语义」的普通写入；
 // 使用它意味着调用方**显式接受**该写不生效，而不是忽略返回值。
 func WarnIfUnaffected(logger *slog.Logger, fact WriteFact) {
 	if fact.Affected > 0 || logger == nil {

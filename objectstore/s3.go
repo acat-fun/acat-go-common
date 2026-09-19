@@ -1,6 +1,6 @@
 // Package objectstore 提供最小 S3 兼容对象存储客户端（AWS Signature V4，纯标准库，无第三方依赖）。
 //
-// 背景：Java 侧 read 域有 3 个服务真实使用对象存储——
+// 背景：read 域有 3 个服务真实使用对象存储——
 //   - `acat-read-app-file`（读写，bucket `acat-read-files`）
 //   - `acat-read-admin-file`（读写，bucket `acat-read-files`）
 //   - `acat-read-app-comic`（只读代理漫画图，bucket `acat-comic-images`）
@@ -8,10 +8,10 @@
 // 三者都用 AWS SDK v2 + `Region.US_EAST_1` + `forcePathStyle(true)` 访问 MinIO；
 // 迁移到 Go 后把这份能力上提到公共库，避免每个服务各写一份 SigV4 签名。
 //
-// 与 Java 侧的逐字对齐点：
+// 对齐点：
 //   - 区域固定 `us-east-1`、path-style；签名头 `host;x-amz-content-sha256;x-amz-date`（PUT 另加 `content-type`）；
 //   - 数据库 `path` 字段形如 `<bucket>/<key>`，取 object key 时剥掉第一个 '/' 之前的内容；
-//   - 失败一律返回错误（Java 抛 IllegalStateException → HTTP 500）。
+//   - 失败一律返回错误。
 package objectstore
 
 import (
@@ -32,7 +32,7 @@ import (
 const (
 	// emptyPayloadHash 是空请求体的 SHA-256（GET/DELETE 无 body）。
 	emptyPayloadHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	// region 与 Java `Region.US_EAST_1` 一致。
+	// region 与 Region.US_EAST_1 一致。
 	region = "us-east-1"
 	// service 是 SigV4 的 service 名。
 	service = "s3"
@@ -95,7 +95,7 @@ func (c *Client) Bucket() string {
 	return c.bucket
 }
 
-// ObjectNameFromPath 复刻 Java 侧的 `objectNameFromPath`：
+// ObjectNameFromPath。
 // 数据库存的是 `<bucket>/<key>`，取 key 时剥掉第一个 '/' 之前的内容。
 func ObjectNameFromPath(path string) (string, error) {
 	if strings.TrimSpace(path) == "" {
@@ -126,7 +126,6 @@ func (c *Client) Get(ctx context.Context, objectName string) (io.ReadCloser, err
 
 // Put 上传对象（整体签名，payload 为内存字节）。
 //
-// Java 用 AWS SDK 的 `RequestBody.fromInputStream`（分块签名流式上传）；Go 侧为了
 // 让 `x-amz-content-sha256` 覆盖真实内容，把请求体整体读入内存后再签名上传。
 // 文件域（头像/封面/样例）体积有限，接单次请求足够；返回值语义与 Java 一致（失败抛错）。
 func (c *Client) Put(ctx context.Context, objectName, contentType string, body []byte) error {
@@ -143,7 +142,7 @@ func (c *Client) Put(ctx context.Context, objectName, contentType string, body [
 	return nil
 }
 
-// Delete 删除对象；对象不存在时 S3 也返回 204，视为成功（与 Java deleteObject 一致）。
+// Delete 删除对象；对象不存在时 S3 也返回 204，视为成功。
 func (c *Client) Delete(ctx context.Context, objectName string) error {
 	response, err := c.do(ctx, http.MethodDelete, objectName, nil, nil, "")
 	if err != nil {
@@ -188,7 +187,7 @@ func (c *Client) CreateBucket(ctx context.Context) error {
 	return nil
 }
 
-// EnsureBucket 复刻 Java `BookFileServiceImpl#init`：先 HeadBucket，缺失则 CreateBucket；
+// EnsureBucket。
 // 其他异常只记录不阻断启动（调用方决定日志口径）。
 func (c *Client) EnsureBucket(ctx context.Context) error {
 	if c == nil {

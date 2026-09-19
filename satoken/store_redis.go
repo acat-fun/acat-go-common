@@ -9,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// RedisStore 是基于 go-redis 的 Store 实现，与 Java 侧 sa-token-redis-jackson 共用
+// RedisStore 是基于 go-redis 的 Store 实现
 // 同一 Redis 实例与同一批 key，实现双实现共享登录态。
 type RedisStore struct {
 	client *redis.Client

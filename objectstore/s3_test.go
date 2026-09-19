@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// TestObjectNameFromPath 复刻 Java 侧（app-comic/admin-file/app-file）的 objectNameFromPath。
+// TestObjectNameFromPath。
 func TestObjectNameFromPath(t *testing.T) {
 	cases := []struct {
 		path string
@@ -34,7 +34,7 @@ func TestObjectNameFromPath(t *testing.T) {
 	}
 	for _, blank := range []string{"", "   ", "\t"} {
 		if _, err := ObjectNameFromPath(blank); err == nil {
-			t.Fatalf("空白路径 %q 应该报错（Java IllegalArgumentException）", blank)
+			t.Fatalf("空白路径 %q 应该报错", blank)
 		}
 	}
 }
@@ -207,7 +207,7 @@ func TestDeleteSignsRequest(t *testing.T) {
 	}
 }
 
-// TestGetNon2xx 非 2xx 视为失败（Java 侧抛 IllegalStateException → HTTP 500）。
+// TestGetNon2xx 非 2xx 视为失败。
 func TestGetNon2xx(t *testing.T) {
 	client, closeServer := newStubClient(t, "b", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
@@ -219,7 +219,7 @@ func TestGetNon2xx(t *testing.T) {
 	}
 }
 
-// TestEnsureBucket 复刻 Java 启动期行为：HeadBucket 404 → CreateBucket。
+// TestEnsureBucket。
 func TestEnsureBucket(t *testing.T) {
 	var methods []string
 	client, closeServer := newStubClient(t, "acat-read-files", func(w http.ResponseWriter, req *http.Request) {

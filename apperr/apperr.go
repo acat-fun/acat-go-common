@@ -1,6 +1,5 @@
-// Package apperr 定义"需要改变 HTTP 状态码"的语义错误，与 Java 侧 GlobalExceptionHandler 对齐。
+// Package apperr 定义"需要改变 HTTP 状态码"的语义错误。
 //
-// Java 侧行为（lib/backend/acat-svc-common）：业务失败一律 HTTP 200 + body.code≠0；
 // 只有下列语义错误才改 HTTP 状态码，并且响应体仍是 Result 结构。
 package apperr
 

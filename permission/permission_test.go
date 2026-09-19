@@ -34,7 +34,7 @@ func sessionWithPermissions(t *testing.T, logic *satoken.Logic, loginID string, 
 	return session
 }
 
-// TestCheckPermissionRootBypass root（loginID=="0"）必须直接放行（Java StpInterfaceImpl 口径）。
+// TestCheckPermissionRootBypass root（loginID=="0"）必须直接放行。
 func TestCheckPermissionRootBypass(t *testing.T) {
 	checker, logic := newChecker(t)
 	session := sessionWithPermissions(t, logic, RootLoginID, nil)
@@ -93,7 +93,7 @@ func TestRequireAnyPermissionOrSemantics(t *testing.T) {
 		t.Fatalf("OR 全不命中必须拒绝")
 	}
 	if err := actor.RequireAnyPermission(); err == nil {
-		t.Fatalf("空权限码列表必须拒绝（Java 注解空值抛异常，不静默放行）")
+		t.Fatalf("空权限码列表必须拒绝")
 	}
 }
 
@@ -146,7 +146,7 @@ func TestNilActorAndSession(t *testing.T) {
 	}
 }
 
-// TestLoginIDNumericValue 会话中 loginID 为数字时按字符串比较（Java Jackson 反序列化为 Integer 的场景）。
+// TestLoginIDNumericValue 会话中 loginID 为数字时按字符串比较。
 func TestLoginIDNumericValue(t *testing.T) {
 	session := &satoken.Session{LoginID: float64(0)}
 	if LoginID(session) != "0" {

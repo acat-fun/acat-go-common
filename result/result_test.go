@@ -44,8 +44,8 @@ func TestOKMessageSetsSuccess(t *testing.T) {
 	}
 }
 
-// TestResultKeyOrderMatchesJava 顶层键序必须与 Java 侧一致：code→message→data→success。
-func TestResultKeyOrderMatchesJava(t *testing.T) {
+// TestResultKeyOrder 顶层键序：code→message→data→success。
+func TestResultKeyOrder(t *testing.T) {
 	cases := []struct {
 		name    string
 		payload any
@@ -59,7 +59,7 @@ func TestResultKeyOrderMatchesJava(t *testing.T) {
 			t.Fatalf("%s 序列化失败: %v", testCase.name, err)
 		}
 		if got := strings.Join(topLevelKeys(t, raw), ","); got != "code,message,data,success" {
-			t.Errorf("%s 顶层键序 = %s, 期望 code,message,data,success（Java 键序）", testCase.name, got)
+			t.Errorf("%s 顶层键序 = %s, 期望 code,message,data,success", testCase.name, got)
 		}
 	}
 }
@@ -91,7 +91,7 @@ func topLevelKeys(t *testing.T, raw []byte) []string {
 }
 
 func TestFailCode(t *testing.T) {
-	// 前端模块乐观锁使用 40901，是 Java 侧唯一的非 1 业务码。
+	// 前端模块乐观锁使用 40901。
 	got := FailCode(40901, "数据已被他人修改")
 	if got.Code != 40901 || got.Data != nil {
 		t.Errorf("FailCode = %+v", got)
@@ -107,12 +107,12 @@ func TestPageDataFieldNames(t *testing.T) {
 	if err != nil {
 		t.Fatalf("序列化失败: %v", err)
 	}
-	// 普通分页 headNodeTotal=null（Java PageData.of 语义）
+	// 普通分页 headNodeTotal=null
 	want := `{"total":3,"headNodeTotal":null,"pageIndex":1,"pageSize":10,"list":["a"]}`
 	if string(raw) != want {
 		t.Errorf("分页响应体 = %s, 期望 %s", raw, want)
 	}
-	// 树分页 headNodeTotal 有值（Java PageData.ofTree 语义）
+	// 树分页 headNodeTotal 有值
 	treeRaw, err := json.Marshal(NewTreePageData([]string{"a"}, 3, 2, 1, 10))
 	if err != nil {
 		t.Fatalf("树分页序列化失败: %v", err)

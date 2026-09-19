@@ -19,7 +19,7 @@ import (
 const TokenHeader = "satoken"
 
 // MessageNotLoggedIn 是未登录/会话失效的统一 401 文案，
-// 与 Java 侧 GlobalExceptionHandler#handleNotLoginException 逐字一致（fun.acat.common 全局异常处理）。
+// 与
 const MessageNotLoggedIn = "未登录或登录已过期，请重新登录"
 
 // contextKey 是中间件写入请求上下文的键类型。
