@@ -2,7 +2,7 @@
 
 ACAT 后端 Go 公共基础库。
 
-> 归属：`lib/backend/acat-go-common`，独立 git 仓库；module path `gitea.acat.fun/acat-fun/acat-go-common`。
+> 归属：`lib/backend/acat-go-common`，独立 git 仓库；module path `git.acat.fun/acat-fun/acat-go-common`。
 > 目标：抽取跨服务稳定的通用能力，业务领域（Entity / Mapper / Controller / 业务枚举）**禁止**进入本库。
 
 ## 包结构

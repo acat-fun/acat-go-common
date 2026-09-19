@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"gitea.acat.fun/acat-fun/acat-go-common/apperr"
-	"gitea.acat.fun/acat-fun/acat-go-common/logging"
-	"gitea.acat.fun/acat-fun/acat-go-common/result"
-	"gitea.acat.fun/acat-fun/acat-go-common/satoken"
+	"git.acat.fun/acat-fun/acat-go-common/apperr"
+	"git.acat.fun/acat-fun/acat-go-common/logging"
+	"git.acat.fun/acat-fun/acat-go-common/result"
+	"git.acat.fun/acat-fun/acat-go-common/satoken"
 )
 
 func newAuthFixture(t *testing.T) (*satoken.Logic, string) {

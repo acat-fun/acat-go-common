@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"strings"
 
-	"gitea.acat.fun/acat-fun/acat-go-common/apperr"
-	"gitea.acat.fun/acat-fun/acat-go-common/logging"
-	"gitea.acat.fun/acat-fun/acat-go-common/result"
-	"gitea.acat.fun/acat-fun/acat-go-common/satoken"
+	"git.acat.fun/acat-fun/acat-go-common/apperr"
+	"git.acat.fun/acat-fun/acat-go-common/logging"
+	"git.acat.fun/acat-fun/acat-go-common/result"
+	"git.acat.fun/acat-fun/acat-go-common/satoken"
 )
 
 // TokenHeader 是前端携带 token 的请求头名（管理端 Cookie 模式下仍然保留该头兼容路径）。

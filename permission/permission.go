@@ -14,9 +14,9 @@ import (
 	"context"
 	"fmt"
 
-	"gitea.acat.fun/acat-fun/acat-go-common/apperr"
-	"gitea.acat.fun/acat-fun/acat-go-common/middleware"
-	"gitea.acat.fun/acat-fun/acat-go-common/satoken"
+	"git.acat.fun/acat-fun/acat-go-common/apperr"
+	"git.acat.fun/acat-fun/acat-go-common/middleware"
+	"git.acat.fun/acat-fun/acat-go-common/satoken"
 )
 
 // RootLoginID 是超级管理员固定 id。

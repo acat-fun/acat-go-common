@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"gitea.acat.fun/acat-fun/acat-go-common/apperr"
-	"gitea.acat.fun/acat-fun/acat-go-common/satoken"
+	"git.acat.fun/acat-fun/acat-go-common/apperr"
+	"git.acat.fun/acat-fun/acat-go-common/satoken"
 )
 
 // newChecker 构造带内存会话的 Logic 与 Checker。

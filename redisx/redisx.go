@@ -8,7 +8,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"gitea.acat.fun/acat-fun/acat-go-common/config"
+	"git.acat.fun/acat-fun/acat-go-common/config"
 )
 
 // Open 按配置创建 Redis 客户端并探活。
