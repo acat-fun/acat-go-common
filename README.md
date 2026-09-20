@@ -50,4 +50,7 @@ go test -race ./...
 ## 依赖策略
 
 - 公共库只依赖公开模块（MySQL 驱动、go-redis、x/crypto、yaml）。
-- 服务侧通过 `replace` 或私有 module 代理引用本库；devops 流水线需为 Go 阶段提供 `GOPROXY` 与私有仓凭据（见根工作区文档）。
+- 服务侧以**版本化依赖**引用本库（`go.mod` 中 pin 到具体提交），**不再使用 `replace`**；`vendor/` 与 `go.sum` 不提交（项目规范 2026-09-19）。
+- 解析路径：Gitea `47.108.230.93` 只有 HTTP → `GOINSECURE` 接受 `?go-get=1` 元数据 → `git url.insteadOf` 把 `http://47.108.230.93/` 改写为 `ssh://git@47.108.230.93/`（实际传输走 SSH）。**不要用 `git.acat.fun` 作 module path**（该域名无 HTTPS，Go 元数据探测必然失败）。
+- devops 流水线由 Runner 注入 git 凭据（容器内 `/gitcred`，`GIT_SSH_COMMAND` + `GIT_CONFIG_GLOBAL`）与 `GOPROXY=https://goproxy.cn,direct`；本机一次性配置见工作区 `docs/setup-go-env.sh`。
+- 本库变更后：各服务执行 `go mod tidy` 并按需更新 pin（不再需要 `go mod vendor`）。
