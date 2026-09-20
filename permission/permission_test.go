@@ -38,7 +38,7 @@ func sessionWithPermissions(t *testing.T, logic *satoken.Logic, loginID string, 
 func TestCheckPermissionRootBypass(t *testing.T) {
 	checker, logic := newChecker(t)
 	session := sessionWithPermissions(t, logic, RootLoginID, nil)
-	if err := checker.CheckPermission(session, "acat:read:admin:content:pages:delete"); err != nil {
+	if err := checker.CheckPermission(session, "acat:read:admin:cat-read:pages:delete"); err != nil {
 		t.Fatalf("root 应放行任意权限码，实际: %v", err)
 	}
 }
@@ -46,8 +46,8 @@ func TestCheckPermissionRootBypass(t *testing.T) {
 // TestCheckPermissionDenied 普通用户缺少权限码时必须 403 + 「无操作权限」。
 func TestCheckPermissionDenied(t *testing.T) {
 	checker, logic := newChecker(t)
-	session := sessionWithPermissions(t, logic, "u-1", []string{"acat:read:admin:content:files"})
-	err := checker.CheckPermission(session, "acat:read:admin:content:files:delete")
+	session := sessionWithPermissions(t, logic, "u-1", []string{"acat:read:admin:cat-read:files"})
+	err := checker.CheckPermission(session, "acat:read:admin:cat-read:files:delete")
 	if err == nil {
 		t.Fatalf("缺少权限码时必须拒绝")
 	}
@@ -60,8 +60,8 @@ func TestCheckPermissionDenied(t *testing.T) {
 // TestCheckPermissionGranted 普通用户持有权限码时放行。
 func TestCheckPermissionGranted(t *testing.T) {
 	checker, logic := newChecker(t)
-	session := sessionWithPermissions(t, logic, "u-2", []string{"a", "acat:read:admin:content:files:upload"})
-	if err := checker.CheckPermission(session, "acat:read:admin:content:files:upload"); err != nil {
+	session := sessionWithPermissions(t, logic, "u-2", []string{"a", "acat:read:admin:cat-read:files:upload"})
+	if err := checker.CheckPermission(session, "acat:read:admin:cat-read:files:upload"); err != nil {
 		t.Fatalf("持有权限码应放行，实际: %v", err)
 	}
 }
