@@ -108,6 +108,30 @@ type SaTokenConfig struct {
 	CookieMaxAge int `yaml:"cookieMaxAge"`
 }
 
+// AuthMode 登录态实现：satoken（Redis 会话，默认）或 jwt（无状态 HS256）。
+const (
+	AuthModeSaToken = "satoken"
+	AuthModeJWT     = "jwt"
+)
+
+// AuthConfig 描述认证模式选择。
+type AuthConfig struct {
+	// Mode satoken | jwt；默认 satoken。jwt 模式不强制 Redis。
+	Mode string `yaml:"mode"`
+}
+
+// JWTConfig 描述 JWT 模式参数（auth.mode=jwt 时生效）。
+type JWTConfig struct {
+	// Secret HS256 密钥（只允许来自环境变量或未提交配置）。
+	Secret string `yaml:"secret"`
+	// Issuer iss 声明，默认 acat。
+	Issuer string `yaml:"issuer"`
+	// TTLSeconds 有效期秒数，默认 86400（24h）。
+	TTLSeconds int64 `yaml:"ttlSeconds"`
+	// TokenName Cookie/逻辑名，默认 satoken。
+	TokenName string `yaml:"tokenName"`
+}
+
 // DefaultSaTokenTimeoutSeconds 是 Sa-Token 默认登录有效期（30 天），
 // 与 lib/backend/acat-go-common/satoken.DefaultTimeoutSeconds 保持一致。
 const DefaultSaTokenTimeoutSeconds int64 = 2592000
@@ -117,7 +141,9 @@ type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	Redis    RedisConfig    `yaml:"redis"`
+	Auth     AuthConfig     `yaml:"auth"`
 	SaToken  SaTokenConfig  `yaml:"saToken"`
+	JWT      JWTConfig      `yaml:"jwt"`
 	// LogLevel 日志级别：debug/info/warn/error，默认 info。
 	LogLevel string `yaml:"logLevel"`
 }
@@ -157,6 +183,14 @@ func Default() Config {
 			TokenStyle:     "uuid",
 			CookiePath:     "/",
 			CookieSameSite: "Lax",
+		},
+		Auth: AuthConfig{
+			Mode: AuthModeSaToken,
+		},
+		JWT: JWTConfig{
+			Issuer:     "acat",
+			TTLSeconds: 86400,
+			TokenName:  "satoken",
 		},
 		LogLevel: "info",
 	}
@@ -229,6 +263,12 @@ func applyEnv(cfg *Config) error {
 	setStr(&cfg.SaToken.CookieSameSite, "ACAT_SA_TOKEN_COOKIE_SAME_SITE")
 	setInt(&cfg.SaToken.CookieMaxAge, "ACAT_SA_TOKEN_COOKIE_MAX_AGE")
 
+	setStr(&cfg.Auth.Mode, "ACAT_AUTH_MODE")
+	setStr(&cfg.JWT.Secret, "ACAT_JWT_SECRET")
+	setStr(&cfg.JWT.Issuer, "ACAT_JWT_ISSUER")
+	setInt64(&cfg.JWT.TTLSeconds, "ACAT_JWT_TTL_SECONDS")
+	setStr(&cfg.JWT.TokenName, "ACAT_JWT_TOKEN_NAME")
+
 	setStr(&cfg.LogLevel, "ACAT_LOG_LEVEL")
 	return nil
 }
@@ -283,6 +323,22 @@ func (c *Config) Normalize() {
 	}
 	if c.SaToken.CookieSameSite == "" {
 		c.SaToken.CookieSameSite = def.SaToken.CookieSameSite
+	}
+	if c.Auth.Mode == "" {
+		c.Auth.Mode = AuthModeSaToken
+	}
+	c.Auth.Mode = strings.ToLower(strings.TrimSpace(c.Auth.Mode))
+	if c.Auth.Mode != AuthModeSaToken && c.Auth.Mode != AuthModeJWT {
+		c.Auth.Mode = AuthModeSaToken
+	}
+	if c.JWT.Issuer == "" {
+		c.JWT.Issuer = def.JWT.Issuer
+	}
+	if c.JWT.TTLSeconds <= 0 {
+		c.JWT.TTLSeconds = def.JWT.TTLSeconds
+	}
+	if c.JWT.TokenName == "" {
+		c.JWT.TokenName = def.JWT.TokenName
 	}
 	if c.LogLevel == "" {
 		c.LogLevel = def.LogLevel

@@ -5,11 +5,13 @@ package middleware
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/acat-fun/acat-go-common/apperr"
+	"github.com/acat-fun/acat-go-common/authn"
 	"github.com/acat-fun/acat-go-common/logging"
 	"github.com/acat-fun/acat-go-common/result"
 	"github.com/acat-fun/acat-go-common/satoken"
@@ -65,23 +67,37 @@ func WithSession(ctx context.Context, session *satoken.Session, token string) co
 
 // AuthConfig 配置认证中间件。
 type AuthConfig struct {
-	// Logic 是 Sa-Token 兼容逻辑。
+	// Provider 登录态提供者（satoken.Logic 或 jwtauth.Logic）。
+	// 与 Logic 二选一；两者都设时优先 Provider。
+	Provider authn.SessionProvider
+	// Logic 是 Sa-Token 兼容逻辑（历史字段，等价于 Provider=*satoken.Logic）。
 	Logic *satoken.Logic
-	// CookieName 允许从 Cookie 读取 token；空则与 Logic 的 token 名一致。
+	// CookieName 允许从 Cookie 读取 token；空则与 Provider.TokenName() 一致。
 	CookieName string
 	// CookieOnly 为 true 时不接受请求头 token（管理端 HttpOnly Cookie 模式）。
 	CookieOnly bool
 }
 
+func (cfg AuthConfig) provider() authn.SessionProvider {
+	if cfg.Provider != nil {
+		return cfg.Provider
+	}
+	if cfg.Logic != nil {
+		return cfg.Logic
+	}
+	return nil
+}
+
 // Auth 构造认证中间件：校验 token，加载账号会话并写入上下文。
 func Auth(cfg AuthConfig) func(http.Handler) http.Handler {
+	provider := cfg.provider()
 	cookieName := cfg.CookieName
-	if cookieName == "" && cfg.Logic != nil {
-		cookieName = cfg.Logic.Config().TokenName
+	if cookieName == "" && provider != nil {
+		cookieName = provider.TokenName()
 	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			if cfg.Logic == nil {
+			if provider == nil {
 				WriteError(req.Context(), w, apperr.Internal(nil, "认证组件未初始化"))
 				return
 			}
@@ -90,17 +106,17 @@ func Auth(cfg AuthConfig) func(http.Handler) http.Handler {
 				WriteError(req.Context(), w, apperr.Unauthorized(MessageNotLoggedIn))
 				return
 			}
-			loginID, err := cfg.Logic.CheckLogin(req.Context(), token)
+			loginID, err := provider.CheckLogin(req.Context(), token)
 			if err != nil {
 				// 存储故障与"未登录"必须区分：前者是 503，后者是 401。
-				if err == satoken.ErrNotFound {
+				if errors.Is(err, satoken.ErrNotFound) {
 					WriteError(req.Context(), w, apperr.Unauthorized(MessageNotLoggedIn))
 					return
 				}
 				WriteError(req.Context(), w, apperr.Unavailable("会话存储不可用: %v", err))
 				return
 			}
-			session, err := cfg.Logic.GetSession(req.Context(), loginID)
+			session, err := provider.GetSession(req.Context(), loginID)
 			if err != nil {
 				WriteError(req.Context(), w, apperr.Unavailable("读取会话失败: %v", err))
 				return
@@ -140,8 +156,12 @@ func WriteResult(w http.ResponseWriter, payload any) {
 	writeJSONBody(w, payload)
 }
 
-// WriteError 输出语义错误：HTTP 状态码来自 apperr，响应体仍是 Result 结构。
+// WriteError 输出语义错误或业务失败：HTTP 状态码来自 apperr.Error，业务失败（*Business）保持 HTTP 200。
 func WriteError(ctx context.Context, w http.ResponseWriter, err error) {
+	if b, ok := apperr.IsBusiness(err); ok {
+		WriteResult(w, result.FailCode(b.Code, b.Message))
+		return
+	}
 	status := apperr.HTTPStatusOf(err)
 	code := apperr.CodeOf(err)
 	message := err.Error()

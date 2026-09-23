@@ -17,6 +17,7 @@ const (
 	StatusConflict      = http.StatusConflict            // 409 冲突
 	StatusUnprocessable = http.StatusUnprocessableEntity // 422 参数校验失败
 	StatusBadRequest    = http.StatusBadRequest          // 400 请求格式错误
+	StatusTooMany       = http.StatusTooManyRequests     // 429 请求过于频繁
 	StatusUnavailable   = http.StatusServiceUnavailable  // 503 依赖不可用
 	StatusInternal      = http.StatusInternalServerError // 500 未知错误
 )
@@ -87,6 +88,11 @@ func Unprocessable(format string, args ...any) *Error {
 	return newf(StatusUnprocessable, 422, format, args...)
 }
 
+// RateLimited 构造 429 请求过于频繁错误。
+func RateLimited(format string, args ...any) *Error {
+	return newf(StatusTooMany, 429, format, args...)
+}
+
 // Unavailable 构造 503 依赖不可用错误。
 func Unavailable(format string, args ...any) *Error {
 	return newf(StatusUnavailable, 503, format, args...)
@@ -118,6 +124,7 @@ func HTTPStatusOf(err error) int {
 }
 
 // CodeOf 返回错误应使用的业务码；普通错误按 500 处理，nil 按 0 处理。
+// 若为 *Business，返回其业务码（调用方应配合 HTTP 200 写出）。
 func CodeOf(err error) int {
 	if err == nil {
 		return 0
@@ -125,5 +132,14 @@ func CodeOf(err error) int {
 	if e, ok := As(err); ok {
 		return e.Code
 	}
+	if b, ok := IsBusiness(err); ok {
+		return b.Code
+	}
 	return 500
+}
+
+// IsHTTPSemantic 判断是否为需改写 HTTP 状态的语义错误（非业务失败）。
+func IsHTTPSemantic(err error) bool {
+	_, ok := As(err)
+	return ok
 }

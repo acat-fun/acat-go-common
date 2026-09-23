@@ -66,6 +66,9 @@ func NewLogic(cfg Config, store Store, logger Logger) *Logic {
 // Config 返回归一化后的配置。
 func (l *Logic) Config() Config { return l.cfg }
 
+// TokenName 返回配置的 token 名（实现 authn.SessionProvider）。
+func (l *Logic) TokenName() string { return l.cfg.TokenName }
+
 // Store 返回底层存储，供健康检查与服务复用。
 func (l *Logic) Store() Store { return l.store }
 
