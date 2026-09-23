@@ -2,7 +2,8 @@
 
 ACAT 后端 Go 公共基础库。
 
-> 归属：`lib/backend/acat-go-common`，独立 git 仓库；module path `47.108.230.93/acat-fun/acat-go-common`。
+> 归属：`lib/backend/acat-go-common`，独立 git 仓库；module path `github.com/acat-fun/acat-go-common`（GitHub **Public**）。
+> 权威源：Gitea `git@47.108.230.93:acat-fun/acat-go-common.git`；同步到 GitHub `git@github.com:acat-fun/acat-go-common.git`（Push Mirror 或本地双推）。
 > 目标：抽取跨服务稳定的通用能力，业务领域（Entity / Mapper / Controller / 业务枚举）**禁止**进入本库。
 
 ## 包结构
@@ -22,7 +23,7 @@ ACAT 后端 Go 公共基础库。
 | `permission` | 领域权限判定框架（`/health` 等白名单 + 注解式权限校验语义） | 权限注解 + 权限数据源语义 |
 | `objectstore` | MinIO/S3 对象存储（SigV4 签名） | — |
 | `mysqlx` | MySQL 写样板：空值转换（`nullString`/`nullInt`/`nullTime`）、约束冲突识别（`IsIntegrityViolation`）、字段级 insert/update 样板 | 含审计字段自动填充语义 |
-| `mongox` | **MySQL+Mongo 跨存储一致性 outbox**（2026-09-19 遗留事项 2）：`EventStore`（业务事务内入队 `t_read_mongo_outbox`）+ `Replayer`（后台幂等重放，单条失败隔离、10 次上限）+ `DocApplier`（服务注入应用逻辑） | 跨存储补偿机制，无对应 starter |
+| `mongox` | **MySQL+Mongo 跨存储一致性 outbox**：`EventStore` + `Replayer` + `DocApplier` | 跨存储补偿机制 |
 
 ## Sa-Token 兼容边界（重要）
 
@@ -38,8 +39,6 @@ ACAT 后端 Go 公共基础库。
 - token 值生成遵循 `token-style` 配置（`uuid` / `simple-uuid` / `random-32` / `random-64` / `random-128` / `tik`），默认 `uuid`（32 位无连字符）。
 - Session JSON 采用 `sa-token-jackson` 的 Jackson 序列化约定：启用 default typing、`@class` 以属性形式嵌入（`NON_FINAL`），`dataMap` 内的集合带 `java.util.ArrayList` 等类型标记。
 
-**未在真实 Redis 上验证**：当前环境无法连到既有登录服务与共享 Redis，Jackson 多态 `@class` 的完整嵌套形态（尤其 `dataMap` 中 `List<String>` 的具体标记位置）需与登录服务会话交叉验证。验证方法与判定标准见根任务文档；在交叉验证通过前，Go 服务不得直接接管 Admin 认证路由。
-
 ## 质量门禁
 
 ```bash
@@ -49,8 +48,8 @@ go test -race ./...
 
 ## 依赖策略
 
-- 公共库只依赖公开模块（MySQL 驱动、go-redis、x/crypto、yaml）。
-- 服务侧以**版本化依赖**引用本库（`go.mod` 中 pin 到具体提交），**不再使用 `replace`**；`vendor/` 与 `go.sum` 不提交（项目规范 2026-09-19）。
-- 解析路径：Gitea `47.108.230.93` 只有 HTTP → `GOINSECURE` 接受 `?go-get=1` 元数据 → `git url.insteadOf` 把 `http://47.108.230.93/` 改写为 `ssh://git@47.108.230.93/`（实际传输走 SSH）。**不要用 `git.acat.fun` 作 module path**（该域名无 HTTPS，Go 元数据探测必然失败）。
-- devops 流水线由 Runner 注入 git 凭据（容器内 `/gitcred`，`GIT_SSH_COMMAND` + `GIT_CONFIG_GLOBAL`）与 `GOPROXY=https://goproxy.cn,direct`；本机一次性配置见工作区 `docs/setup-go-env.sh`。
-- 本库变更后：各服务执行 `go mod tidy` 并按需更新 pin（不再需要 `go mod vendor`）。
+- 公共库只依赖公开模块（MySQL 驱动、go-redis、uuid、yaml）。
+- **消费方按 GitHub module path 引用**：`github.com/acat-fun/acat-go-common`（Public，`go get` 无需 `GOINSECURE`）。
+- 服务侧以**版本化依赖**引用本库（`go.mod` 中 pin 到 tag 或伪版本），**不再使用 `replace`**；`vendor/` 与 `go.sum` 不提交（项目规范）。
+- 业务服务自身的 module path 若仍为 `47.108.230.93/acat-fun/<svc>`，本机/Runner 仍需 `GOINSECURE` + `git url.insteadOf`（见工作区 `docs/setup-go-env.sh`）；**仅本公共库**走 GitHub HTTPS。
+- 本库变更后：推 Gitea（Mirror 到 GitHub）→ 打 tag（如 `v0.1.0`）→ 各服务 `go get github.com/acat-fun/acat-go-common@v0.1.0` 并 `go mod tidy`。

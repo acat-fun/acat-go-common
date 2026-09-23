@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"strings"
 
-	"47.108.230.93/acat-fun/acat-go-common/apperr"
-	"47.108.230.93/acat-fun/acat-go-common/logging"
-	"47.108.230.93/acat-fun/acat-go-common/result"
-	"47.108.230.93/acat-fun/acat-go-common/satoken"
+	"github.com/acat-fun/acat-go-common/apperr"
+	"github.com/acat-fun/acat-go-common/logging"
+	"github.com/acat-fun/acat-go-common/result"
+	"github.com/acat-fun/acat-go-common/satoken"
 )
 
 // TokenHeader 是前端携带 token 的请求头名（管理端 Cookie 模式下仍然保留该头兼容路径）。

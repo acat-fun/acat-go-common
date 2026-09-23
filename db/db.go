@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql" // 注册 mysql driver
 
-	"47.108.230.93/acat-fun/acat-go-common/config"
+	"github.com/acat-fun/acat-go-common/config"
 )
 
 // Open 按配置创建 MySQL 连接池并探活。
