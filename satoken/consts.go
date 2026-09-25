@@ -1,7 +1,7 @@
-// Package satoken 复刻 Sa-Token v1.44.0 的登录态与权限模型，用于 Go 服务与 Java 服务
-// 在同一 Redis 下共享会话（迁移期认证兼容层）。
+// Package satoken 实现 Sa-Token v1.44.0 的登录态与权限模型，
+// 供 Go 服务在同一 Redis 下共享会话。
 //
-// 复刻来源（Sa-Token v1.44.0 源码）：
+// 键形状取自 Sa-Token v1.44.0：
 //   - StpLogic.splicingKeyTokenValue  -> <tokenName>:<loginType>:token:<tokenValue>
 //   - StpLogic.splicingKeySession     -> <tokenName>:<loginType>:session:<loginId>
 //   - StpLogic.splicingKeyTokenSession-> <tokenName>:<loginType>:token-session:<tokenValue>
@@ -9,10 +9,9 @@
 //   - StpLogic.saveTokenToIdMapping   -> token 映射的 value 是 String.valueOf(loginId)
 //   - SaSession 默认构造              -> dataMap 为 ConcurrentHashMap，terminalList 为 ArrayList
 //
-// ⚠️ 兼容性边界：Session 的 JSON 形态由 sa-token-jackson（Jackson default typing，
-// 属性形式 @class，NON_FINAL 类嵌入类型信息）产生。本包按该约定实现编解码，
-// 但**尚未在真实 Redis 上与 Java 侧做交叉验证**，验证清单见包内 session_codec.go 注释与
-// 。
+// ⚠️ 兼容性边界：Session 的 JSON 形态遵循 sa-token-jackson 约定（Jackson default typing，
+// 属性形式 @class，NON_FINAL 类嵌入类型信息）。本包按该约定实现编解码，
+// 用例见包内 session_codec.go 与 session_codec_test.go。
 package satoken
 
 // 与 Sa-Token 默认配置一致的常量。

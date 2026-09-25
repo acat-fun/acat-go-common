@@ -1,6 +1,6 @@
 // Package result 提供统一响应结构。
 //
-// 契约要点（迁移期必须保持一致，见 ）：
+// 契约要点：
 //   - 成功：HTTP 200 + {"code":0,"message":"OK","data":...,"success":true}
 //   - 业务失败：HTTP 200 + {"code":1,"message":"...","data":null,"success":false}
 //   - 顶层键序固定为 code→message→data→success
@@ -91,7 +91,7 @@ const (
 	// DefaultPageSize 默认每页条数。
 	DefaultPageSize = 10
 	// MaxPageSize 分页上限。
-	// 迁移期 Go 侧按同样口径不强制拦截，仅在应用层提供 NormalizePage 供新接口使用。
+	// 本库不强制拦截超限值，由应用层按需调用 NormalizePage 归一化。
 	MaxPageSize = 100
 )
 

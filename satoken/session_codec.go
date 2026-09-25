@@ -50,7 +50,7 @@ func (t *TerminalInfo) UnmarshalJSON(data []byte) error {
 
 // Session 对应 cn.dev33.satoken.session.SaSession。
 //
-// 真实 JSON 形态（Sa-Token 1.44.0 + sa-token-jackson 实测，2026-09-13 UAT 等价环境）：
+// 会话 JSON 形态（Sa-Token 1.44.0 + sa-token-jackson 约定）：
 //
 //	{"@class":"cn.dev33.satoken.session.SaSession",
 //	 "id":"<uuid>","type":"Account-Session","loginType":"login",

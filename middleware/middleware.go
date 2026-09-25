@@ -70,7 +70,7 @@ type AuthConfig struct {
 	// Provider 登录态提供者（satoken.Logic 或 jwtauth.Logic）。
 	// 与 Logic 二选一；两者都设时优先 Provider。
 	Provider authn.SessionProvider
-	// Logic 是 Sa-Token 兼容逻辑（历史字段，等价于 Provider=*satoken.Logic）。
+	// Logic 是 Sa-Token 兼容逻辑（兼容字段，等价于 Provider=*satoken.Logic）。
 	Logic *satoken.Logic
 	// CookieName 允许从 Cookie 读取 token；空则与 Provider.TokenName() 一致。
 	CookieName string

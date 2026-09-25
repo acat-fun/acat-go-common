@@ -4,7 +4,7 @@ ACAT 后端 Go 公共基础库。
 
 > 归属：`lib/backend/acat-go-common`，独立 git 仓库；module path `github.com/acat-fun/acat-go-common`（GitHub **Public**）。
 > 权威源：Gitea `git@47.108.230.93:acat-fun/acat-go-common.git`；同步到 GitHub `git@github.com:acat-fun/acat-go-common.git`（Push Mirror 或本地双推）。
-> 目标：抽取跨服务稳定的通用能力，业务领域（Entity / Mapper / Controller / 业务枚举）**禁止**进入本库。
+> 目标：抽取跨服务稳定的通用能力，业务领域（实体模型 / 数据访问 / HTTP 处理器 / 业务枚举）**禁止**进入本库。
 
 ## 包结构
 
@@ -45,12 +45,12 @@ ACAT 后端 Go 公共基础库。
 
 | mode | 实现 | Redis | 说明 |
 | --- | --- | --- | --- |
-| `satoken`（默认） | `satoken.Logic` + `RedisStore` | 必需 | 与 Java Sa-Token 共享会话；ACAT 业务服务使用 |
+| `satoken`（默认） | `satoken.Logic` + `RedisStore` | 必需 | 会话键与 JSON 形态遵循 Sa-Token v1.44.0 约定（既有会话数据互认）；ACAT 业务服务使用 |
 | `jwt` | `jwtauth.Logic` | 不需要 | HS256 无状态；Logout 不撤销已签 token；权限由服务自查 DB |
 
 环境变量：`ACAT_AUTH_MODE`、`ACAT_JWT_SECRET`、`ACAT_JWT_ISSUER`、`ACAT_JWT_TTL_SECONDS`、`ACAT_JWT_TOKEN_NAME`。
 
-`middleware.Auth` 接受 `AuthConfig.Provider`（`authn.SessionProvider`）或历史字段 `Logic *satoken.Logic`。
+`middleware.Auth` 接受 `AuthConfig.Provider`（`authn.SessionProvider`）或兼容字段 `Logic *satoken.Logic`。
 
 ## 质量门禁
 
@@ -63,6 +63,6 @@ go test -race ./...
 
 - 公共库只依赖公开模块（MySQL 驱动、go-redis、uuid、yaml、golang-jwt）。
 - **消费方按 GitHub module path 引用**：`github.com/acat-fun/acat-go-common`（Public，`go get` 无需 `GOINSECURE`）。
-- 服务侧以**版本化依赖**引用本库（`go.mod` 中 pin 到 tag 或伪版本），**不再使用 `replace`**；`vendor/` 与 `go.sum` 不提交（项目规范）。
-- 业务服务自身的 module path 若仍为 `47.108.230.93/acat-fun/<svc>`，本机/Runner 仍需 `GOINSECURE` + `git url.insteadOf`（见工作区 `docs/setup-go-env.sh`）；**仅本公共库**走 GitHub HTTPS。
+- 服务侧以**版本化依赖**引用本库（`go.mod` 中 pin 到 tag 或伪版本），不使用 `replace`；`vendor/` 与 `go.sum` 不入库。
+- 业务服务自身的 module path 若仍为 `47.108.230.93/acat-fun/<svc>`，本机与 Runner 仍需 `GOINSECURE` + `git url.insteadOf`；**仅本公共库**走 GitHub HTTPS。
 - 本库变更后：推 Gitea（Mirror 到 GitHub）→ 打 tag（如 `v0.2.0`）→ 各服务 `go get github.com/acat-fun/acat-go-common@v0.2.0` 并 `go mod tidy`。

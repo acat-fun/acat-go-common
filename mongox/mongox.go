@@ -1,11 +1,10 @@
-// Package mongox 提供 MySQL+MongoDB 跨存储一致性机制（后端整改遗留事项 2，2026-09-19）。
+// Package mongox 提供 MySQL+MongoDB 跨存储一致性机制。
 //
 // 背景：acat-read-app-author（章节正文）与 acat-read-admin-book（书籍元数据）的
 // 写用例同时落 MySQL 与 MongoDB。事务机制（db.Handle）只能保证「Mongo 写失败 →
 // MySQL 回滚」；事务提交后 Mongo 侧仍可能丢失（进程崩溃、网络分区、Mongo 主从切换）。
 //
-// 方案（规范 §8.7「本地事务 + Outbox + 可重试消费者」，复用 t_read_search_outbox
-// 的成熟模式）：
+// 方案为「本地事务 + Outbox + 可重试消费者」：
 //
 //   - 业务写用例在**同一 MySQL 事务**内追加 outbox 行（EventStore.Enqueue），
 //     payload 携带完整文档 JSON，重放不依赖再次读库；

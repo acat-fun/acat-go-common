@@ -1,8 +1,7 @@
 // Package permission 提供管理端权限判定（Sa-Token 会话快照 + root 角色直通）的公共实现。
 //
-// 背景：管理端各服务都有注解式权限拦截；
-// 迁移到 Go 后没有注解拦截器，由各服务 httpapi 显式调用本包的 Checker/Actor 完成同样判定。
-// 阶段 1/2 各服务曾各自复制一份（admin-site/account/operation/…），此处上提为公共能力。
+// 背景：管理端各服务都需要权限拦截，由各服务 httpapi 显式调用本包的 Checker/Actor 完成判定；
+// admin-site / account / operation 等服务共用本实现。
 //
 // 对齐点：
 //   - 超级管理员统一按角色判定：会话 roles 快照包含 RootRoleID（"root"）即视为超管，直接放行；
@@ -30,7 +29,7 @@ const RootRoleID = "root"
 // RootLoginID 是历史口径下超级管理员固定登录 id（worker 表 id="0"）。
 //
 // Deprecated: 超管判定已统一为角色判定（会话 roles 含 RootRoleID）；本常量仅供
-// 迁移期兼容与数据订正脚本引用，新代码不要使用。
+// 兼容与数据订正脚本引用，新代码不要使用。
 const RootLoginID = "0"
 
 // MessageForbidden 是权限不足的统一文案。

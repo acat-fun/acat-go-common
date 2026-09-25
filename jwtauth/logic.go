@@ -1,6 +1,6 @@
 // Package jwtauth 提供基于 JWT（HS256）的无状态登录态实现。
 //
-// 适用场景：服务无 Redis、不需要与 Java Sa-Token 共享会话时（如 devops 平台日后选用）。
+// 适用场景：服务无 Redis、不需要与 satoken 模式共享会话时（如 devops 平台日后选用）。
 // 与 satoken 模式不互通：JWT 不写 Redis token 映射；Logout 默认 no-op（无黑名单）。
 // GetSession 返回仅含 LoginID 的最小会话；权限由各服务自行查库，不依赖会话快照。
 package jwtauth

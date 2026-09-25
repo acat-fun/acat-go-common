@@ -13,7 +13,7 @@ var ErrNotFound = errors.New("satoken: 键不存在")
 
 // Store 抽象 SaTokenDao 的键值持久层。
 //
-// 迁移期实现选型：生产用 RedisStore，
+// 实现选型：生产用 RedisStore，
 // 单元测试用 MemoryStore；接口只有 6 个方法，替换后端不影响业务代码。
 type Store interface {
 	// Get 读取值；不存在返回 ErrNotFound。

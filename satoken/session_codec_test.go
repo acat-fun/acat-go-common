@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-// TestReadJavaWrittenSession 用 Sa-Token 1.44.0 真实产出的会话 JSON（testdata 样本）
-// 验证 Go 侧解码：这是迁移期最关键的一条兼容性回归
+// TestReadJavaWrittenSession 用 Sa-Token 1.44.0 产出的会话 JSON（testdata 样本）
+// 验证解码：这是会话互认最关键的一条兼容性回归
 // （样本由 interop.SaTokenInterop 在 Sa-Token 1.44.0 + sa-token-jackson 下产出）。
 func TestReadJavaWrittenSession(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "satoken-java-session.json"))

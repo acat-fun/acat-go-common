@@ -195,7 +195,7 @@ func Placeholders(n int) string {
 
 // PlaceholdersCompact 生成 n 个 `?,?,?`（无空格）。
 //
-// 个别服务（acat-read-admin-operation 等）的既有 SQL 文本使用无空格形态，迁移后保持原样。
+// 个别服务（acat-read-admin-operation 等）的 SQL 文本使用无空格形态，本库保持同款输出。
 func PlaceholdersCompact(n int) string {
 	if n <= 0 {
 		return ""

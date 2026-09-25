@@ -5,8 +5,8 @@
 //   - `acat-read-admin-file`（读写，bucket `acat-read-files`）
 //   - `acat-read-app-comic`（只读代理漫画图，bucket `acat-comic-images`）
 //
-// 三者都用 AWS SDK v2 + `Region.US_EAST_1` + `forcePathStyle(true)` 访问 MinIO；
-// 迁移到 Go 后把这份能力上提到公共库，避免每个服务各写一份 SigV4 签名。
+// 三者都以 path-style + 区域 `us-east-1` 访问 MinIO；该能力由本库统一提供，
+// 避免每个服务各写一份 SigV4 签名。
 //
 // 对齐点：
 //   - 区域固定 `us-east-1`、path-style；签名头 `host;x-amz-content-sha256;x-amz-date`（PUT 另加 `content-type`）；
@@ -109,8 +109,8 @@ func ObjectNameFromPath(path string) (string, error) {
 
 // Get 发起 SigV4 签名的 GetObject 请求，返回响应体（由调用方关闭）。
 //
-// 与 Java 的差异：Java 用 AWS SDK（自动重试、chunked 签名校验）；Go 侧只做单次签名请求，
-// 把非 2xx 视为失败，语义（成功返回流、失败抛错 → HTTP 500）一致。
+// 单次签名请求，不做自动重试；把非 2xx 视为失败
+// （成功返回流、失败抛错 → 调用方按 HTTP 500 处理）。
 func (c *Client) Get(ctx context.Context, objectName string) (io.ReadCloser, error) {
 	response, err := c.do(ctx, http.MethodGet, objectName, nil, nil, "")
 	if err != nil {
@@ -127,7 +127,7 @@ func (c *Client) Get(ctx context.Context, objectName string) (io.ReadCloser, err
 // Put 上传对象（整体签名，payload 为内存字节）。
 //
 // 让 `x-amz-content-sha256` 覆盖真实内容，把请求体整体读入内存后再签名上传。
-// 文件域（头像/封面/样例）体积有限，接单次请求足够；返回值语义与 Java 一致（失败抛错）。
+// 文件域（头像/封面/样例）体积有限，单次请求足够；失败抛错由调用方处理。
 func (c *Client) Put(ctx context.Context, objectName, contentType string, body []byte) error {
 	response, err := c.do(ctx, http.MethodPut, objectName, body, nil, contentType)
 	if err != nil {
