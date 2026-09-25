@@ -30,16 +30,35 @@ func sessionWithPermissions(t *testing.T, logic *satoken.Logic, loginID string, 
 	if err != nil || session == nil {
 		t.Fatalf("读取会话失败: %v", err)
 	}
-	session.Set("permissions", permissions)
+	session.Set(satoken.DataKeyPermissions, permissions)
 	return session
 }
 
-// TestCheckPermissionRootBypass root（loginID=="0"）必须直接放行。
-func TestCheckPermissionRootBypass(t *testing.T) {
+func sessionWithRoles(t *testing.T, logic *satoken.Logic, loginID string, roles, permissions []string) *satoken.Session {
+	t.Helper()
+	session := sessionWithPermissions(t, logic, loginID, permissions)
+	session.Set(satoken.DataKeyRoles, roles)
+	return session
+}
+
+// TestCheckPermissionRootRoleBypass 会话角色含 "root" 必须直接放行任意权限码。
+func TestCheckPermissionRootRoleBypass(t *testing.T) {
 	checker, logic := newChecker(t)
-	session := sessionWithPermissions(t, logic, RootLoginID, nil)
+	session := sessionWithRoles(t, logic, "u-root", []string{RootRoleID, "admin"}, nil)
 	if err := checker.CheckPermission(session, "acat:read:admin:cat-read:pages:delete"); err != nil {
-		t.Fatalf("root 应放行任意权限码，实际: %v", err)
+		t.Fatalf("root 角色应放行任意权限码，实际: %v", err)
+	}
+}
+
+// TestLoginIDZeroWithoutRootRole 登录 id 为 "0" 但会话无 root 角色时不再放行（判定只看角色）。
+func TestLoginIDZeroWithoutRootRole(t *testing.T) {
+	checker, logic := newChecker(t)
+	session := sessionWithRoles(t, logic, "0", []string{"viewer"}, []string{"some:code"})
+	if IsRootSession(session) {
+		t.Fatalf("登录 id '0' 但无 root 角色不应视为超管")
+	}
+	if err := checker.CheckPermission(session, "other:code"); err == nil {
+		t.Fatalf("无 root 角色时缺少权限码必须拒绝")
 	}
 }
 
@@ -112,19 +131,29 @@ func TestRequirePermissionGroups(t *testing.T) {
 	}
 }
 
-// TestRootBypassesPermission root 绕过所有分组判定。
-func TestRootBypassesPermission(t *testing.T) {
+// TestRootRoleBypassesPermission root 角色绕过所有分组判定。
+func TestRootRoleBypassesPermission(t *testing.T) {
 	checker, logic := newChecker(t)
-	session := sessionWithPermissions(t, logic, RootLoginID, nil)
-	actor := &Actor{LoginID: RootLoginID, Session: session, checker: checker}
+	session := sessionWithRoles(t, logic, "u-root-2", []string{RootRoleID}, nil)
+	actor := &Actor{LoginID: "u-root-2", Session: session, checker: checker}
 	if !actor.IsRoot() {
 		t.Fatalf("IsRoot() 应为 true")
 	}
 	if err := actor.RequirePermissionGroups([]string{"a"}, []string{"b"}); err != nil {
-		t.Fatalf("root 应放行，实际: %v", err)
+		t.Fatalf("root 角色应放行，实际: %v", err)
 	}
 	if err := actor.RequireAnyPermission(); err != nil {
-		t.Fatalf("root 应放行空列表，实际: %v", err)
+		t.Fatalf("root 角色应放行空列表，实际: %v", err)
+	}
+}
+
+// TestRootRoleWithoutChecker Actor 无 checker 但会话含 root 角色时仍放行。
+func TestRootRoleWithoutChecker(t *testing.T) {
+	_, logic := newChecker(t)
+	session := sessionWithRoles(t, logic, "u-root-3", []string{RootRoleID}, nil)
+	actor := &Actor{LoginID: "u-root-3", Session: session}
+	if err := actor.RequirePermission("any:code"); err != nil {
+		t.Fatalf("root 角色无 checker 也应放行，实际: %v", err)
 	}
 }
 
@@ -137,12 +166,20 @@ func TestNilActorAndSession(t *testing.T) {
 	if actor.IsRoot() {
 		t.Fatal("nil 操作者不是 root")
 	}
+	if IsRootSession(nil) {
+		t.Fatal("nil 会话不是 root")
+	}
 	checker, _ := newChecker(t)
 	if err := checker.CheckPermission(nil, "a"); err == nil {
 		t.Fatal("nil 会话必须拒绝")
 	}
 	if LoginID(nil) != "" {
 		t.Fatal("nil 会话 LoginID 应为空串")
+	}
+	// 无 checker 的 Actor 对非 root 会话的判定必须拒绝（不 panic）。
+	actor2 := &Actor{LoginID: "u-8"}
+	if err := actor2.RequirePermission("a"); err == nil {
+		t.Fatal("无 checker 的非 root 操作者必须拒绝")
 	}
 }
 
