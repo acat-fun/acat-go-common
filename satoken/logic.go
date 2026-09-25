@@ -307,7 +307,7 @@ func (l *Logic) SaveSession(ctx context.Context, session *Session) error {
 	return l.saveSession(ctx, session, l.cfg.Timeout)
 }
 
-// CheckPermission 判定权限码；与 Java 侧 StpInterfaceImpl 一致：
+// CheckPermission 判定权限码（与会话 permissions 快照语义一致）：
 // root（loginId=="0"）由调用方直接判真，本方法不做特权绕过。
 func (l *Logic) CheckPermission(session *Session, code string) bool {
 	if session == nil || code == "" {

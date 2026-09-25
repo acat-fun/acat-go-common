@@ -88,7 +88,7 @@ const (
 	javaClassListWrapper    = "java.util.ArrayList"
 )
 
-// NewSession 构造与 Java 侧 new SaSession(id) 等价的空会话。
+// NewSession 构造空会话（字段形态遵循 Sa-Token 的 SaSession 约定）。
 func NewSession(id string) *Session {
 	return &Session{
 		ID:           id,
