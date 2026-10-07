@@ -76,6 +76,10 @@ type AuthConfig struct {
 	CookieName string
 	// CookieOnly 为 true 时不接受请求头 token（管理端 HttpOnly Cookie 模式）。
 	CookieOnly bool
+	// ContextHook 可选：会话装载成功后由宿主补充自己的请求上下文
+	// （如把共享会话转成宿主用户视图、追加首次改密等宿主专属门禁）。
+	// 返回错误时按 WriteError 输出（宿主用 apperr 表达 401/403 等语义）。
+	ContextHook func(ctx context.Context, req *http.Request, session *satoken.Session) (context.Context, error)
 }
 
 func (cfg AuthConfig) provider() authn.SessionProvider {
@@ -125,7 +129,18 @@ func Auth(cfg AuthConfig) func(http.Handler) http.Handler {
 				WriteError(req.Context(), w, apperr.Unauthorized(MessageNotLoggedIn))
 				return
 			}
-			next.ServeHTTP(w, req.WithContext(WithSession(req.Context(), session, token)))
+			ctx := WithSession(req.Context(), session, token)
+			if cfg.ContextHook != nil {
+				hooked, err := cfg.ContextHook(ctx, req, session)
+				if err != nil {
+					WriteError(ctx, w, err)
+					return
+				}
+				if hooked != nil {
+					ctx = hooked
+				}
+			}
+			next.ServeHTTP(w, req.WithContext(ctx))
 		})
 	}
 }

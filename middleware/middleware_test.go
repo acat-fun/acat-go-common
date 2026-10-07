@@ -219,3 +219,49 @@ func TestCORSWildcardNeverCombinesWithCredentials(t *testing.T) {
 		t.Errorf("不应下发 Allow-Credentials，实际 %q", got)
 	}
 }
+
+// TestAuthContextHook 校验宿主上下文钩子：会话装载成功后调用；钩子报错按 WriteError 输出且不进业务。
+func TestAuthContextHook(t *testing.T) {
+	logic := satoken.NewLogic(satoken.Config{TokenName: "satoken-test"}, satoken.NewMemoryStore(), nil)
+	token, err := logic.Login(context.Background(), "u1")
+	if err != nil {
+		t.Fatalf("登录失败: %v", err)
+	}
+	hookCalled := false
+	handler := Auth(AuthConfig{Logic: logic, ContextHook: func(ctx context.Context, req *http.Request, session *satoken.Session) (context.Context, error) {
+		hookCalled = true
+		if session == nil {
+			t.Fatal("钩子应收到会话")
+		}
+		return context.WithValue(ctx, hookKey{}, "hooked"), nil
+	}})(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if value, _ := r.Context().Value(hookKey{}).(string); value != "hooked" {
+			t.Fatalf("钩子补充的上下文未生效: %v", r.Context().Value(hookKey{}))
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/ping", nil)
+	req.Header.Set(TokenHeader, token)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK || !hookCalled {
+		t.Fatalf("应通过钩子并 200：code=%d hookCalled=%v", rec.Code, hookCalled)
+	}
+
+	// 钩子报错：按 apperr 语义输出且不进入业务处理器。
+	rejected := Auth(AuthConfig{Logic: logic, ContextHook: func(context.Context, *http.Request, *satoken.Session) (context.Context, error) {
+		return nil, apperr.Forbidden("首次登录必须先修改密码")
+	}})(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("钩子报错时不应执行处理器")
+	}))
+	req2 := httptest.NewRequest(http.MethodGet, "/api/v1/ping", nil)
+	req2.Header.Set(TokenHeader, token)
+	rec2 := httptest.NewRecorder()
+	rejected.ServeHTTP(rec2, req2)
+	if rec2.Code != http.StatusForbidden {
+		t.Fatalf("钩子报错应 403，实际 %d", rec2.Code)
+	}
+}
+
+type hookKey struct{}
