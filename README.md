@@ -3,7 +3,7 @@
 ACAT 后端 Go 公共基础库。
 
 > 归属：`lib/backend/acat-go-common`，独立 git 仓库；module path `github.com/acat-fun/acat-go-common`（GitHub **Public**）。
-> 权威源：Gitea `git@47.108.230.93:acat-fun/acat-go-common.git`；同步到 GitHub `git@github.com:acat-fun/acat-go-common.git`（Push Mirror 或本地双推）。
+> 权威源：GitHub `git@github.com:acat-fun/acat-go-common.git`；局域网 Forgejo `acat-fun/acat-go-common` 是它的只读拉取镜像。
 > 目标：抽取跨服务稳定的通用能力，业务领域（实体模型 / 数据访问 / HTTP 处理器 / 业务枚举）**禁止**进入本库。
 
 ## 包结构
@@ -64,5 +64,5 @@ go test -race ./...
 - 公共库只依赖公开模块（MySQL 驱动、go-redis、uuid、yaml、golang-jwt）。
 - **消费方按 GitHub module path 引用**：`github.com/acat-fun/acat-go-common`（Public，`go get` 无需 `GOINSECURE`）。
 - 服务侧以**版本化依赖**引用本库（`go.mod` 中 pin 到 tag 或伪版本），不使用 `replace`；`vendor/` 与 `go.sum` 不入库。
-- 业务服务自身的 module path 若仍为 `47.108.230.93/acat-fun/<svc>`，本机与 Runner 仍需 `GOINSECURE` + `git url.insteadOf`；**仅本公共库**走 GitHub HTTPS。
+- 业务服务自身的 module path 为 `github.com/acat-fun/<svc>`；依赖全部来自 GitHub 公共仓，本机与 Runner 均无需 `GOINSECURE` / `git url.insteadOf`。
 - 本库变更后：推 Gitea（Mirror 到 GitHub）→ 打 tag（如 `v0.2.0`）→ 各服务 `go get github.com/acat-fun/acat-go-common@v0.2.0` 并 `go mod tidy`。
