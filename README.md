@@ -62,7 +62,7 @@ go test -race ./...
 ## 依赖策略
 
 - 公共库只依赖公开模块（MySQL 驱动、go-redis、uuid、yaml、golang-jwt）。
-- **消费方按 GitHub module path 引用**：`github.com/acat-fun/acat-go-common`（Public，`go get` 无需 `GOINSECURE`）。
+- **消费方按 GitHub module path 引用**：`github.com/acat-fun/acat-go-common`（Public，`go get` 直接拉取）。
 - 服务侧以**版本化依赖**引用本库（`go.mod` 中 pin 到 tag 或伪版本），不使用 `replace`；`vendor/` 与 `go.sum` 不入库。
-- 业务服务自身的 module path 为 `github.com/acat-fun/<svc>`；依赖全部来自 GitHub 公共仓，本机与 Runner 均无需 `GOINSECURE` / `git url.insteadOf`。
-- 本库变更后：推 Gitea（Mirror 到 GitHub）→ 打 tag（如 `v0.2.0`）→ 各服务 `go get github.com/acat-fun/acat-go-common@v0.2.0` 并 `go mod tidy`。
+- 业务服务自身的 module path 为 `github.com/acat-fun/<svc>`；依赖全部来自 GitHub 公共仓，本机与 Runner 均无需私有源配置。
+- 本库变更后：推 GitHub→ 打 tag（如 `v0.2.0`）→ 各服务 `go get github.com/acat-fun/acat-go-common@v0.2.0` 并 `go mod tidy`。
